@@ -12,6 +12,7 @@ def generate_log_normal_shocks(spot, vol, num_shocks=780):
     :param int num_shocks: Number of shocks to produce
     :return [int]: Vector of shocks
     """
+    temp = 1
     shock_vector = [vol]*num_shocks
 
     return shock_vector
