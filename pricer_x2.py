@@ -1,4 +1,34 @@
 import QuantLib as ql
+import scenario_generator
+
+
+def create_bsm_process(spot, vol, rfr, div):
+    bsm_process = None # TODO -> implement returning a bsm process
+    return bsm_process
+
+
+def create_call_option(strike, maturity_date, process):
+    call_option = None # TODO -> implement
+    return call_option
+
+
+def main():
+    base_spot = 100
+    vol  = 0.1
+    shocks = scenario_generator.generate_log_normal_shocks(vol=vol, num_shocks=100)
+    rand_spot = base_spot * shocks
+
+    npvs = []
+
+    for spot in rand_spot:
+        # TODO -> implement
+        option = create_call_option()
+        npvs.append(option.NPV())
+
+    print(npvs)
+
+if __name__ == '__main__':
+    main()
 
 def pricer_call(spot, vol, rfr, div, strike, date):
     initialValue = ql.QuoteHandle(ql.SimpleQuote(spot))
