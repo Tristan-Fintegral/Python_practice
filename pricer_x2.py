@@ -1,11 +1,11 @@
 import QuantLib as ql
 import scenario_generator
 
+print('Delete this print statement, you should be using logger.')
 print('This is the pricer module')
 
 def create_bsm_process(spot, vol, rfr, div):
-    bsm_process = ql.BlackScholesMertonProcess(spot, div, rfr, vol)
-    None # TODO -> implement returning a bsm process
+    bsm_process = None # TODO -> implement returning a bsm process
     return bsm_process
 
 
