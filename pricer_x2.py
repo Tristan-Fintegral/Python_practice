@@ -5,7 +5,7 @@ print('Delete this print statement, you should be using logger.')
 print('This is the pricer module')
 print('Nikolas is printing something to test Git')
 print('Nikolas is printing something else to test Git')
-print('here is another print!!')
+print('here is another print!!!')
 
 def create_bsm_process(spot, vol, rfr, div):
     bsm_process = None # TODO -> implement returning a bsm process
