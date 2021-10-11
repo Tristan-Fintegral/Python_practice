@@ -2,6 +2,8 @@ import QuantLib as ql
 import scenario_generator
 from matplotlib import pyplot
 
+print('pycharm is now working')
+
 def create_bsm_process(spot, vol, rfr, div):
     initialValue = ql.QuoteHandle(ql.SimpleQuote(spot))
     sigma = vol
