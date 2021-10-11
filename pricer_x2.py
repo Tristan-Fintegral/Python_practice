@@ -2,9 +2,17 @@ import QuantLib as ql
 import scenario_generator
 from matplotlib import pyplot
 
-print('pycharm is now working')
 
 def create_bsm_process(spot, vol, rfr, div):
+    """
+    This function creates BSM pricer given market values
+
+    :param float div: flat forward dividend rate using actual/365 fixed
+    :param int spot: spot price
+    :param float vol: volatility
+    :param float rfr: flat forward risk free rate using actual/365 fixed
+
+    """
     initialValue = ql.QuoteHandle(ql.SimpleQuote(spot))
     sigma = vol
     today = ql.Date().todaysDate()
@@ -16,6 +24,15 @@ def create_bsm_process(spot, vol, rfr, div):
 
 
 def create_call_option(strike, maturity_date, process):
+    """
+       This function creates call option using BSM pricer
+       created by create_bsm_process with strike price and maturity date. This
+       function uses an analytical approach
+
+       :param int strike: strike price of option
+       :param datetime maturity_date: maturity date of option
+
+       """
     engine = ql.AnalyticEuropeanEngine(process)
     option_type = ql.Option.Call
     payoff = ql.PlainVanillaPayoff(option_type, strike)
@@ -25,6 +42,16 @@ def create_call_option(strike, maturity_date, process):
     return call_option
 
 def create_call_option_mc(strike, maturity_date, process):
+    """
+        Add paramater for timesteps and samples
+        This function creates call option using BSM pricer
+        created by create_bsm_process with strike price and maturity date. This
+        function uses a monte carlo approach
+
+        :param int strike: strike price of option
+        :param datetime maturity_date: maturity date of option
+
+        """
     rng = "pseudorandom"  # could use "lowdiscrepancy"
     engine = ql.MCEuropeanEngine(process,rng,timeSteps=2, requiredSamples=10000)
     option_type = ql.Option.Call
@@ -68,7 +95,7 @@ def main():
     pyplot.scatter(rand_spot, npvs)
     pyplot.show()
 
-    ql.Option.
+
 
 if __name__ == '__main__':
     main()
