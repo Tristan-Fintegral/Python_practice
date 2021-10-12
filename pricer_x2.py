@@ -1,7 +1,7 @@
 import QuantLib as ql
 import scenario_generator
 from matplotlib import pyplot
-
+import enum
 
 class OptionPricerType:
     ANALYTICAL = 'Analytical'
@@ -13,6 +13,11 @@ class CallOrPut:
     CALL = 'Call'
     PUT = 'Put'
     ALL_TYPES  = [CALL, PUT]
+
+class PricerType(enum.Enum):
+    Analytical = 1
+    Monte_Carlo = 2
+    Third = 3
 
 
 def create_bsm_process(spot, vol, rfr, div):
@@ -51,13 +56,12 @@ def create_option(strike, maturity_date, process, pricer_type=None, payoff=None)
        :param int strike: strike price of option
        :param datetime maturity_date: maturity date of option
        """
-    pricer_type = pricer_type or OptionPricerType.ANALYTICAL
-    if pricer_type not in OptionPricerType.ALL_PRICERS:
+    pricer_type = pricer_type or PricerType(1).name
+    if pricer_type not in PricerType._member_names_:
         raise RuntimeError(f'Pricer Not Considered')
-
-    if pricer_type == OptionPricerType.ANALYTICAL:
+    if pricer_type == PricerType.Analytical.name:
         engine = ql.AnalyticEuropeanEngine(process)
-    elif pricer_type == OptionPricerType.MONTE_CARLO:
+    elif pricer_type == PricerType.Monte_Carlo.name:
         rng = "pseudorandom"  # could use "lowdiscrepancy"
         engine = ql.MCEuropeanEngine(
             process, rng, timeSteps=1, requiredSamples=10000
@@ -95,7 +99,7 @@ def main():
 
     for spot in rand_spot:
         proc = create_bsm_process(spot, vol, rfr, div)
-        option = create_option(strike, ql.Date(15, 6, 2025), proc, pricer_type=OptionPricerType.MONTE_CARLO
+        option = create_option(strike, ql.Date(15, 6, 2025), proc, pricer_type=PricerType.Analytical.name
                                , payoff=CallOrPut.CALL)
         npvs.append(option.NPV())
 
