@@ -9,6 +9,11 @@ class OptionPricerType:
     A_THIRD_PRICER = 'Pricer Three'
     ALL_PRICERS = [ANALYTICAL, MONTE_CARLO, A_THIRD_PRICER]
 
+class call_or_put:
+    CALL = 'Call'
+    PUT = 'Put'
+    ALL_TYPES  = [CALL, PUT]
+
 
 def create_bsm_process(spot, vol, rfr, div):
     """
@@ -37,7 +42,7 @@ def create_bsm_process(spot, vol, rfr, div):
     return bsm_process
 
 
-def create_call_option(strike, maturity_date, process, pricer_type=None):
+def create_option(strike, maturity_date, process, pricer_type=None, o_type=None):
     """
        This function creates call option using BSM pricer
        created by create_bsm_process with strike price and maturity date. This
@@ -55,47 +60,28 @@ def create_call_option(strike, maturity_date, process, pricer_type=None):
     elif pricer_type == OptionPricerType.MONTE_CARLO:
         rng = "pseudorandom"  # could use "lowdiscrepancy"
         engine = ql.MCEuropeanEngine(
-            process, rng, timeSteps=2, requiredSamples=10000
+            process, rng, timeSteps=1, requiredSamples=10000
         )
     else:
         raise RuntimeError(f'PUT STATEMENT HERE')
 
-    option_type = ql.Option.Call
+    o_type = o_type or call_or_put.CALL
+    if o_type not in call_or_put.ALL_TYPES:
+        raise RuntimeError(f'PUT STATEMENT HERE')
+    if o_type == call_or_put.CALL:
+        option_type = ql.Option.Call
+    elif o_type == call_or_put.PUT:
+        option_type = ql.Option.Put
+    else:
+        raise RuntimeError(f'PUT STATEMENT HERE')
+
+
     payoff = ql.PlainVanillaPayoff(option_type, strike)
     europeanExercise = ql.EuropeanExercise(maturity_date)
     call_option = ql.VanillaOption(payoff, europeanExercise)
     call_option.setPricingEngine(engine)
     return call_option
 
-def create_call_option_mc(strike, maturity_date, process):
-    """
-        Add paramater for timesteps and samples
-        This function creates call option using BSM pricer
-        created by create_bsm_process with strike price and maturity date. This
-        function uses a monte carlo approach
-
-        :param int strike: strike price of option
-        :param datetime maturity_date: maturity date of option
-
-        """
-    rng = "pseudorandom"  # could use "lowdiscrepancy"
-    engine = ql.MCEuropeanEngine(process,rng,timeSteps=2, requiredSamples=10000)
-    option_type = ql.Option.Call
-    payoff = ql.PlainVanillaPayoff(option_type, strike)
-    europeanExercise = ql.EuropeanExercise(maturity_date)
-    call_option = ql.VanillaOption(payoff, europeanExercise)
-    call_option.setPricingEngine(engine)
-
-    return call_option
-
-def create_put_option(strike, maturity_date, process):
-    engine = ql.AnalyticEuropeanEngine(process)
-    option_type = ql.Option.Put
-    payoff = ql.PlainVanillaPayoff(option_type, strike)
-    europeanExercise = ql.EuropeanExercise(maturity_date)
-    put_option = ql.VanillaOption(payoff, europeanExercise)
-    put_option.setPricingEngine(engine)
-    return put_option
 
 
 def main():
@@ -111,7 +97,8 @@ def main():
 
     for spot in rand_spot:
         proc = create_bsm_process(spot, vol, rfr, div)
-        option = create_call_option(strike, ql.Date(15, 6, 2025), proc)
+        option = create_option(strike, ql.Date(15, 6, 2025), proc, pricer_type=OptionPricerType.ANALYTICAL
+                               ,o_type=call_or_put.PUT)
         npvs.append(option.NPV())
 
     print(npvs)
@@ -126,33 +113,4 @@ def main():
 if __name__ == '__main__':
     main()
 
-# def pricer_call(spot, vol, rfr, div, strike, date):
-#     initialValue = ql.QuoteHandle(ql.SimpleQuote(spot))
-#     sigma = vol
-#     today = ql.Date().todaysDate()
-#     riskFreeTS = ql.YieldTermStructureHandle(ql.FlatForward(today, rfr, ql.Actual365Fixed()))
-#     dividendTS = ql.YieldTermStructureHandle(ql.FlatForward(today, div, ql.Actual365Fixed()))
-#     volTS = ql.BlackVolTermStructureHandle(ql.BlackConstantVol(today, ql.NullCalendar(), sigma, ql.Actual365Fixed()))
-#     process = ql.BlackScholesMertonProcess(initialValue, dividendTS, riskFreeTS, volTS)
-#
-#     rng = "pseudorandom"  # could use "lowdiscrepancy"
-#
-#     engine = ql.AnalyticEuropeanEngine(process)
-#     mc_eng=ql.MCEuropeanEngine(process,rng,timeSteps=2, requiredSamples=10000)
-#
-#     strike = strike
-#     maturity = date
-#     option_type = ql.Option.Call
-#
-#     payoff = ql.PlainVanillaPayoff(option_type, strike)
-#
-#     europeanExercise = ql.EuropeanExercise(maturity)
-#     europeanOption = ql.VanillaOption(payoff, europeanExercise)
-#     europeanOption_mc = ql.VanillaOption(payoff, europeanExercise)
-#
-#     europeanOption.setPricingEngine(engine)
-#     europeanOption_mc.setPricingEngine(mc_eng)
-#
-#     print(europeanOption.NPV())
-#     print(europeanOption_mc.NPV())
 
