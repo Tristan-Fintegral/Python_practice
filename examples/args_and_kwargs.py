@@ -1,3 +1,4 @@
+print('these are examples on args and kwargs')
 
 c = []
 
