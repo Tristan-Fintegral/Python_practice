@@ -2,7 +2,6 @@ import QuantLib as ql
 import scenario_generator
 from matplotlib import pyplot
 
-print("Hello")
 
 class OptionPricerType:
     ANALYTICAL = 'Analytical'
@@ -10,7 +9,7 @@ class OptionPricerType:
     A_THIRD_PRICER = 'Pricer Three'
     ALL_PRICERS = [ANALYTICAL, MONTE_CARLO, A_THIRD_PRICER]
 
-class call_or_put:
+class CallOrPut:
     CALL = 'Call'
     PUT = 'Put'
     ALL_TYPES  = [CALL, PUT]
@@ -43,7 +42,7 @@ def create_bsm_process(spot, vol, rfr, div):
     return bsm_process
 
 
-def create_option(strike, maturity_date, process, pricer_type=None, o_type=None):
+def create_option(strike, maturity_date, process, pricer_type=None, payoff=None):
     """
        This function creates call option using BSM pricer
        created by create_bsm_process with strike price and maturity date. This
@@ -54,7 +53,7 @@ def create_option(strike, maturity_date, process, pricer_type=None, o_type=None)
        """
     pricer_type = pricer_type or OptionPricerType.ANALYTICAL
     if pricer_type not in OptionPricerType.ALL_PRICERS:
-        raise RuntimeError(f'PUT STATEMENT HERE')
+        raise RuntimeError(f'Pricer Not Considered')
 
     if pricer_type == OptionPricerType.ANALYTICAL:
         engine = ql.AnalyticEuropeanEngine(process)
@@ -64,17 +63,15 @@ def create_option(strike, maturity_date, process, pricer_type=None, o_type=None)
             process, rng, timeSteps=1, requiredSamples=10000
         )
     else:
-        raise RuntimeError(f'PUT STATEMENT HERE')
+        raise RuntimeError(f'Pricer considered but not yet implemented')
 
-    o_type = o_type or call_or_put.CALL
-    if o_type not in call_or_put.ALL_TYPES:
-        raise RuntimeError(f'PUT STATEMENT HERE')
-    if o_type == call_or_put.CALL:
+    payoff = payoff or CallOrPut.CALL
+    if payoff not in CallOrPut.ALL_TYPES:
+        raise RuntimeError(f'Payoff not implemented')
+    if payoff == CallOrPut.CALL:
         option_type = ql.Option.Call
-    elif o_type == call_or_put.PUT:
+    elif payoff == CallOrPut.PUT:
         option_type = ql.Option.Put
-    else:
-        raise RuntimeError(f'PUT STATEMENT HERE')
 
 
     payoff = ql.PlainVanillaPayoff(option_type, strike)
@@ -98,8 +95,8 @@ def main():
 
     for spot in rand_spot:
         proc = create_bsm_process(spot, vol, rfr, div)
-        option = create_option(strike, ql.Date(15, 6, 2025), proc, pricer_type=OptionPricerType.ANALYTICAL
-                               ,o_type=call_or_put.PUT)
+        option = create_option(strike, ql.Date(15, 6, 2025), proc, pricer_type=OptionPricerType.MONTE_CARLO
+                               , payoff=CallOrPut.CALL)
         npvs.append(option.NPV())
 
     print(npvs)
