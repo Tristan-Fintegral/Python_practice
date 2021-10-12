@@ -84,6 +84,8 @@ def create_option(strike, maturity_date, process, pricer_type=None, payoff=None)
     call_option.setPricingEngine(engine)
     return call_option
 
+def Hedging_Example():
+
 
 
 def main():
