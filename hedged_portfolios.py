@@ -1,6 +1,10 @@
-import option_price
+import numpy as np
+import QuantLib as ql
+from scipy import stats
 import scenario_generator
-# TODO FOCUS -> Logging, clean code, doc strings, well thought out functions
+import option_price
+from matplotlib import pyplot
+#  FOCUS -> Logging, clean code, doc strings, well thought out functions
 
 def hedging_example():
     """
@@ -27,9 +31,52 @@ def hedging_example():
     4) Plot KS test and Spearman Corr as a function of k
     :return:
     """
-    # TODO -> Tristan fill this out
-    pass
+    base_spot = 100
+    vol = 0.1
+    strike = 100
+    rfr = 0.05
+    div = 0.01
+    n_ratios=50
+    ratios= np.linspace(0,1, n_ratios)
+    shocks = scenario_generator.generate_log_normal_shocks(
+        vol=vol, num_shocks=100
+    )
+    rand_spot = base_spot * shocks
+    analytical_npvs=[]
+    mc_npvs=[]
+    spear_values=[]
+    ks_values=[]
 
+    for k in ratios:
+        analytical_npvs = []
+        mc_npvs = []
+        for spot in rand_spot:
+            proc = option_price.create_bsm_process(spot, vol, rfr, div)
+            option = option_price.create_option(strike, ql.Date(15, 6, 2025), proc,
+                                   pricer_type=option_price.PricerType.Analytical.name
+                                   , payoff=option_price.CallOrPut.CALL)
+            analytical_npvs.append(option.NPV())
+            option = option_price.create_option(strike, ql.Date(15, 6, 2025), proc,
+                                                pricer_type=option_price.PricerType.Monte_Carlo.name
+                                                , payoff=option_price.CallOrPut.CALL)
+            mc_npvs.append(option.NPV())
+        analytical_portfolio=[]
+        mc_portfolio=[]
+        for i in range(0,len(analytical_npvs)):
+            analytical_portfolio.append(analytical_npvs[i]-k*rand_spot[i])
+            mc_portfolio.append(mc_npvs[i] - k * rand_spot[i])
+
+
+        spear_values.append(stats.spearmanr(analytical_portfolio, mc_portfolio)[0])
+        ks_values.append(stats.ks_2samp(analytical_portfolio, mc_portfolio)[0])
+
+    # spear_values1=[]
+    # ks_values1=[]
+    # spear_values1.append(pla_tests.pla_tests(analytical_portfolio,mc_portfolio))
+    # ks_values1.append(pla_tests.pla_tests(manalytical_portfolio, mc_portfolio))
+
+    pyplot.scatter(spear_values, ks_values)
+    pyplot.show()
 
 if __name__ == '__main__':
     hedging_example()
