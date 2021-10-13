@@ -84,8 +84,11 @@ def create_option(strike, maturity_date, process, pricer_type=None, payoff=None)
     call_option.setPricingEngine(engine)
     return call_option
 
-def Hedging_Example():
-
+def Hedging_Example(options, stock_prices, k):
+    hedge=[]
+    for i in range(0,len(options)):
+        hedge.append(options[i]-k*stock_prices[i])
+    return hedge
 
 
 def main():
@@ -105,12 +108,14 @@ def main():
                                , payoff=CallOrPut.CALL)
         npvs.append(option.NPV())
 
-    print(npvs)
+    #print(npvs)
 
-    # pyplot.hist(npvs, bins=50)
-    # pyplot.show()
-    pyplot.scatter(rand_spot, npvs)
-    pyplot.show()
+    #pyplot.hist(npvs, bins=50)
+    #pyplot.show()
+    #pyplot.scatter(rand_spot, npvs)
+    #pyplot.show()
+    return npvs, rand_spot
+
 
 
 
