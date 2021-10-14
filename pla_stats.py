@@ -22,7 +22,7 @@ def pla_stats(fo_pnl, risk_pnl):
         of the previous day using the market data at the end of the current day.
     :param risk_pnl: RTPL is the daily trading desk-level P&L produced by
         the valuation engine of the trading desk’s risk management model.
-    :return :Spearman and ks statistics and p-values
+    :return :Spearman and ks statistics and p-values.
     """
     logger.info(
         f"Calculating pla statistics for fo_pnl and risk_pnls of "
