@@ -35,10 +35,10 @@ def create_bsm_process(spot, vol, rfr, div):
     :param float rfr: flat forward risk free rate using actual/365 fixed
     :return BlackScholesMertonProcess: Market data process
     """
-    logger.info(
-        f"Starting bsm process with spot: {spot}, vol: {vol}, "
-        f"rfr: {rfr} and dividend rate: {div}."
-    )
+    # logger.info(
+    #     f"Starting bsm process with spot: {spot}, vol: {vol}, "
+    #     f"rfr: {rfr} and dividend rate: {div}."
+    # )
 
     if spot < 0:
         logger.warning(f"Expected spot price >=0, received {spot}.")
