@@ -1,8 +1,10 @@
-import QuantLib as ql
-import scenario_generator
-from matplotlib import pyplot
 import enum
 import logging
+import QuantLib as ql
+from matplotlib import pyplot
+import scenario_generator
+
+logger = logging.getLogger(__name__)
 
 class OptionPricerType:
     ANALYTICAL = 'Analytical'
@@ -33,6 +35,14 @@ def create_bsm_process(spot, vol, rfr, div):
     :param float rfr: flat forward risk free rate using actual/365 fixed
     :return BlackScholesMertonProcess: Market data process
     """
+    logger.info(
+        f"Starting bsm process with spot: {spot}, vol: {vol}, "
+        f"rfr: {rfr} and dividend rate: {div}."
+    )
+
+    if spot < 0:
+        logger.warning(f"Expected spot price >=0, received {spot}.")
+
     initialValue = ql.QuoteHandle(ql.SimpleQuote(spot))
     today = ql.Date().todaysDate()
     riskFreeTS = ql.YieldTermStructureHandle(
