@@ -9,16 +9,16 @@ logging.basicConfig(
 )
 
 def pla_stats(fo_pnl, risk_pnl):
-    """
-    :param fo_pnl: HTPL is produced by revaluing the positions held at the end of the previous day using the market data
-    at the end of the current day.
-    :param risk_pnl: RTPL is the daily trading desk-level P&L produced by the valuation engine of the trading desk’s
-    risk management model.
-    :return Spearman and ks values
-
-    kolmogorov-smirnov(ks): test metric to assess the similarity of the distributions of RTPL and HPL.
+    """Calculates pnl stats for two sets of pnl vectors.
+    kolmogorov-smirnov(ks): test metric to assess the similarity of the
+    distributions of RTPL and HPL.
     Spearman Correlation: metric to assess correlation between RTPL and HPL.
 
+    :param fo_pnl: HTPL is produced by revaluing the positions held at the end
+        of the previous day using the market data at the end of the current day.
+    :param risk_pnl: RTPL is the daily trading desk-level P&L produced by
+        the valuation engine of the trading desk’s risk management model.
+    :return :Spearman and ks values
     """
     logger.info(
         f"Calculating pla statistics for fo_pnl and risk_pnls of "
