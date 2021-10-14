@@ -47,10 +47,10 @@ def hedging_example():
     strike = 100
     rfr = 0.05
     div = 0.01
-    n_ratios = 40
+    n_ratios = 50
     ratios = np.linspace(0, 1, n_ratios)
     shocks = scenario_generator.generate_log_normal_shocks(
-        vol=vol, num_shocks=200
+        vol=vol, num_shocks=150
     )
     rand_spot = base_spot * shocks
 
@@ -102,19 +102,14 @@ def hedging_example():
             mc_npvs.append(option.NPV())
 
         fo_option_pnl = [x - analytical_base_npv for x in analytical_npvs]
-
         risk_option_pnl = [x - mc_base_npv for x in mc_npvs]
-
         fo_portfolio_pnl = [x - k*(y-base_spot) for x, y in zip(fo_option_pnl, rand_spot)]
-
         risk_portfolio_pnl = [x - k*(y-base_spot) for x, y in zip(risk_option_pnl, rand_spot)]
 
+        sp_values.append(pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).spearman_value)
+        kstest_values.append(pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).ks_value)
 
-        spear_values, ks_values = pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl)
-        sp_values.append(spear_values)
-        kstest_values.append(ks_values)
-
-    pyplot.scatter(ratios, sp_values)
+    pyplot.scatter(ratios, kstest_values)
     pyplot.show()
 
 
