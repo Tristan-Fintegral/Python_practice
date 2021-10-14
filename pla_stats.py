@@ -26,7 +26,7 @@ def pla_stats(fo_pnl, risk_pnl):
 
     logger.info(
         f"{asctime} Retrieving pla statistics, "
-        f"Spearman Correlation: {spear_values} and dividend rate: {ks_values}."
+        f"Spearman Correlation: {spear_values} and KS metric: {ks_values}."
     )
 
     return spear_values, ks_values
