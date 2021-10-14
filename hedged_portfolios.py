@@ -6,9 +6,12 @@ import pla_stats
 import scenario_generator
 import option_price
 from matplotlib import pyplot
+
 #  FOCUS -> Logging, clean code, doc strings, well thought out functions
 
 logger = logging.getLogger(__name__)
+
+
 # logging.basicConfig(
 #     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 #     level=logging.INFO
@@ -44,60 +47,76 @@ def hedging_example():
     strike = 100
     rfr = 0.05
     div = 0.01
-    n_ratios=5
-    ratios= np.linspace(0,1, n_ratios)
+    n_ratios = 40
+    ratios = np.linspace(0, 1, n_ratios)
     shocks = scenario_generator.generate_log_normal_shocks(
-        vol=vol, num_shocks=100
+        vol=vol, num_shocks=200
     )
     rand_spot = base_spot * shocks
-    sp_values=[]
-    kstest_values=[]
+
+    proc = option_price.create_bsm_process(base_spot, vol, rfr, div)
+    option = option_price.create_option(strike,
+                                        ql.Date(15, 6, 2025),
+                                        proc,
+                                        pricer_type=option_price.PricerType.Analytical.name,
+                                        payoff=option_price.CallOrPut.CALL
+                                        )
+    analytical_base_npv = option.NPV()
+    option = option_price.create_option(strike,
+                                        ql.Date(15, 6, 2025),
+                                        proc,
+                                        pricer_type=option_price.PricerType.Monte_Carlo.name,
+                                        payoff=option_price.CallOrPut.CALL
+                                        )
+    mc_base_npv = option.NPV()
+
+    sp_values = []
+    kstest_values = []
 
     for k in ratios:
         logger.info(
             f"Calculating FO and Risk P&Ls with a hedge value of {k} "
         )
         analytical_npvs = []
-        analytical_base_npvs=[]
         mc_npvs = []
-        mc_base_npvs = []
         for spot in rand_spot:
+            # PV for analytical shocked, PV for MC shocked
             proc = option_price.create_bsm_process(spot, vol, rfr, div)
-            option = option_price.create_option(strike, ql.Date(15, 6, 2025), proc,
-                                   pricer_type=option_price.PricerType.Analytical.name
-                                   , payoff=option_price.CallOrPut.CALL)
+            option = option_price.create_option(
+                strike=strike,
+                maturity_date=ql.Date(15, 6, 2025),
+                process=proc,
+                pricer_type=option_price.PricerType.Analytical.name,
+                payoff=option_price.CallOrPut.CALL
+            )
             analytical_npvs.append(option.NPV())
-            proc = option_price.create_bsm_process(base_spot, vol, rfr, div)
-            option = option_price.create_option(strike, ql.Date(15, 6, 2025), proc,
-                                                pricer_type=option_price.PricerType.Analytical.name
-                                                , payoff=option_price.CallOrPut.CALL)
-            analytical_base_npvs.append(option.NPV())
 
             proc = option_price.create_bsm_process(spot, vol, rfr, div)
-            option = option_price.create_option(strike, ql.Date(15, 6, 2025), proc,
-                                                pricer_type=option_price.PricerType.Monte_Carlo.name
-                                                , payoff=option_price.CallOrPut.CALL)
+            option = option_price.create_option(
+                strike=strike,
+                maturity_date=ql.Date(15, 6, 2025),
+                process= proc,
+                pricer_type=option_price.PricerType.Monte_Carlo.name,
+                payoff=option_price.CallOrPut.CALL
+            )
             mc_npvs.append(option.NPV())
-            proc = option_price.create_bsm_process(base_spot, vol, rfr, div)
-            option = option_price.create_option(strike, ql.Date(15, 6, 2025), proc,
-                                                pricer_type=option_price.PricerType.Monte_Carlo.name
-                                                , payoff=option_price.CallOrPut.CALL)
-            mc_base_npvs.append(option.NPV())
 
-        fo_pnl = []
-        risk_pnl = []
-        for i in range(len(analytical_npvs)):
-            fo_pnl.append((analytical_npvs[i]-k * rand_spot[i])-(analytical_base_npvs[i]-k * base_spot))
-            risk_pnl.append((mc_npvs[i]-k * rand_spot[i])-(mc_base_npvs[i]-k * base_spot))
+        fo_option_pnl = [x - analytical_base_npv for x in analytical_npvs]
 
-        spear_values, ks_values = pla_stats.pla_stats(fo_pnl, risk_pnl)
+        risk_option_pnl = [x - mc_base_npv for x in mc_npvs]
+
+        fo_portfolio_pnl = [x - k*(y-base_spot) for x, y in zip(fo_option_pnl, rand_spot)]
+
+        risk_portfolio_pnl = [x - k*(y-base_spot) for x, y in zip(risk_option_pnl, rand_spot)]
+
+
+        spear_values, ks_values = pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl)
         sp_values.append(spear_values)
         kstest_values.append(ks_values)
 
-    pyplot.scatter(sp_values, kstest_values, c=ratios, s=50)
-    pyplot.gray()
+    pyplot.scatter(ratios, sp_values)
     pyplot.show()
+
 
 if __name__ == '__main__':
     hedging_example()
-
