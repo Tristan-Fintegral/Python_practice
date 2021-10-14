@@ -9,9 +9,10 @@ from matplotlib import pyplot
 def hedging_example():
     """
     This example assumes:
-    Portfolio = Call_Option(St) - k * Stock(St)
+    Portfolio PV = Call_Option(St) - k * Stock(St)
     Call_Option = Vanilla European Call (what strike?)
     PnL = Shocked PV - Base PV
+    PnL = [Call_Option(St) - k * Stock(St)] - [Call_Option(S0) - k * Stock(S0)]
     k = hedging ratio
     Stock value = spot
 
