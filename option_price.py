@@ -2,7 +2,7 @@ import QuantLib as ql
 import scenario_generator
 from matplotlib import pyplot
 import enum
-
+import logging
 
 class OptionPricerType:
     ANALYTICAL = 'Analytical'
