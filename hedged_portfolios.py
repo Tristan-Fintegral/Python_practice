@@ -50,7 +50,7 @@ def hedging_example():
     n_ratios = 50
     ratios = np.linspace(0, 1, n_ratios)
     shocks = scenario_generator.generate_log_normal_shocks(
-        vol=vol, num_shocks=150
+        vol=vol, num_shocks=252
     )
     rand_spot = base_spot * shocks
 
@@ -109,7 +109,19 @@ def hedging_example():
         sp_values.append(pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).spearman_value)
         kstest_values.append(pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).ks_value)
 
-    pyplot.scatter(ratios, kstest_values)
+    fig = pyplot.figure()
+    ax1 = fig.add_subplot(121)
+    ax2 = fig.add_subplot(122)
+    ax1.scatter(ratios, kstest_values)
+    ax2.scatter(ratios, sp_values)
+
+    ax1.set_title('FO Pnl vs Risk PnL')
+    ax1.set_xlabel('Hedge Ratio')
+    ax1.set_ylabel('KS Test')
+
+    ax2.set_title('FO Pnl vs Risk PnL')
+    ax2.set_xlabel('Hedge Ratio')
+    ax2.set_ylabel('Spearman Correlation')
     pyplot.show()
 
 
