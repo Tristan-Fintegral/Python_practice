@@ -1,5 +1,6 @@
 # TODO FOCUS -> Logging, clean code, doc strings, well thought out functions
 import logging
+from collections import namedtuple
 from scipy.stats import ks_2samp, spearmanr
 
 logger = logging.getLogger(__name__)
@@ -7,6 +8,9 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+
+PlaResult = namedtuple('PlaResultV2', ['ks_value', 'ks_pvalue', 'spearman_value', 'spearman_pvalue'])
+
 
 def pla_stats(fo_pnl, risk_pnl):
     """Calculates pnl stats for two sets of pnl vectors.
@@ -18,22 +22,24 @@ def pla_stats(fo_pnl, risk_pnl):
         of the previous day using the market data at the end of the current day.
     :param risk_pnl: RTPL is the daily trading desk-level P&L produced by
         the valuation engine of the trading desk’s risk management model.
-    :return :Spearman and ks values
+    :return :Spearman and ks statistics and p-values
     """
     logger.info(
         f"Calculating pla statistics for fo_pnl and risk_pnls of "
         f"length {len(fo_pnl)} & {len(risk_pnl)}."
     )
-    ks_values = ks_2samp(fo_pnl, risk_pnl).statistic
-    spear_values = spearmanr(fo_pnl, risk_pnl).correlation
+    ks_results = ks_2samp(fo_pnl, risk_pnl)
+    spearcorr_results = spearmanr(fo_pnl, risk_pnl)
 
-    return spear_values, ks_values
+    return PlaResult(ks_value=ks_results.statistic, ks_pvalue=ks_results.pvalue,
+                     spearman_value=spearcorr_results.correlation, spearman_pvalue=spearcorr_results.pvalue)
 
 
 def main():
-    ret = pla_stats([1,2,3,4,5], [2,3,4,5,5])
-    logger.info(f'PLA stats returned {ret}.')
+    pla_result = pla_stats([1, 2, 3, 4, 5], [2, 3, 4, 5, 5])
+    logger.info(f'PLA stats returned {pla_result.ks_result} & {pla_result.spear_result}.')
+    pla_result.ks_result.pvalue
 
 
 if __name__ == '__main__':
-   main()
+    main()
