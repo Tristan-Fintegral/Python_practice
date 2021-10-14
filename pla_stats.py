@@ -1,11 +1,12 @@
 # TODO FOCUS -> Logging, clean code, doc strings, well thought out functions
 import logging
-from time import asctime
-
 from scipy.stats import ks_2samp, spearmanr
 
 logger = logging.getLogger(__name__)
-
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
 def pla_stats(fo_pnl, risk_pnl):
     """
@@ -19,18 +20,20 @@ def pla_stats(fo_pnl, risk_pnl):
     Spearman Correlation: metric to assess correlation between RTPL and HPL.
 
     """
-
-    ks_values = ks_2samp(fo_pnl, risk_pnl)[0]
-
-    spear_values = spearmanr(fo_pnl, risk_pnl)[0]
-
     logger.info(
-        f"{asctime} Retrieving pla statistics, "
-        f"Spearman Correlation: {spear_values} and KS metric: {ks_values}."
+        f"Calculating pla statistics for fo_pnl and risk_pnls of "
+        f"length {len(fo_pnl)} & {len(risk_pnl)}."
     )
+    ks_values = ks_2samp(fo_pnl, risk_pnl).statistic
+    spear_values = spearmanr(fo_pnl, risk_pnl).correlation
 
     return spear_values, ks_values
 
 
-#if __name__ == '__main__':
-#    pla_stats()
+def main():
+    ret = pla_stats([1,2,3,4,5], [2,3,4,5,5])
+    logger.info(f'PLA stats returned {ret}.')
+
+
+if __name__ == '__main__':
+   main()

@@ -1,4 +1,5 @@
 import logging
+from collections import namedtuple
 import scenario_generator
 import option_price
 
@@ -8,8 +9,15 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+MathsResult = namedtuple(
+    'MathsResult',
+    ['add', 'subtract', 'multiply', 'divide']
+)
 
-def main():
+def maths_func(x, y):
+    return MathsResult(add=x+y, subtract=x-y, multiply=x*y, divide=x/y)
+
+def example():
     spot_0 = 100
     vol = 0.2
     rfr = 0.005
@@ -24,5 +32,5 @@ def main():
         )
 
 if __name__ == '__main__':
-    main()
+    example()
 
