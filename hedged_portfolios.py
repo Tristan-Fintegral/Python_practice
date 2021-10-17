@@ -123,6 +123,5 @@ def hedging_example():
     ax2.set_ylabel('Spearman Correlation')
     pyplot.show()
 
-
 if __name__ == '__main__':
     hedging_example()
