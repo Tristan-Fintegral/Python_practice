@@ -45,67 +45,66 @@ def hedging_example():
     base_spot = 100
     vol = 0.1
     strike = 100
-    rfr = 0.05
-    div = 0.01
-    n_ratios = 50
+    rfr = 0.005
+    div = 0
+    n_ratios = 20
     ratios = np.linspace(0, 1, n_ratios)
     shocks = scenario_generator.generate_log_normal_shocks(
-        vol=vol, num_shocks=252
+        vol=vol, num_shocks=300
     )
     rand_spot = base_spot * shocks
 
     proc = option_price.create_bsm_process(base_spot, vol, rfr, div)
     option = option_price.create_option(strike,
-                                        ql.Date(15, 6, 2025),
+                                        ql.Date(15, 10, 2022),
                                         proc,
                                         pricer_type=option_price.PricerType.Analytical.name,
                                         payoff=option_price.CallOrPut.CALL
                                         )
     analytical_base_npv = option.NPV()
     option = option_price.create_option(strike,
-                                        ql.Date(15, 6, 2025),
+                                        ql.Date(15, 10, 2022),
                                         proc,
                                         pricer_type=option_price.PricerType.Monte_Carlo.name,
                                         payoff=option_price.CallOrPut.CALL
                                         )
     mc_base_npv = option.NPV()
 
+    analytical_npvs = []
+    mc_npvs = []
+    for spot in rand_spot:
+        # PV for analytical shocked, PV for MC shocked
+        proc = option_price.create_bsm_process(spot, vol, rfr, div)
+        option = option_price.create_option(
+            strike=strike,
+            maturity_date=ql.Date(15, 10, 2022),
+            process=proc,
+            pricer_type=option_price.PricerType.Analytical.name,
+            payoff=option_price.CallOrPut.CALL
+        )
+        analytical_npvs.append(option.NPV())
+
+        proc = option_price.create_bsm_process(spot, vol, rfr, div)
+        option = option_price.create_option(
+            strike=strike,
+            maturity_date=ql.Date(15, 10, 2022),
+            process= proc,
+            pricer_type=option_price.PricerType.Monte_Carlo.name,
+            payoff=option_price.CallOrPut.CALL
+        )
+        mc_npvs.append(option.NPV())
+
+    fo_option_pnl = [x - analytical_base_npv for x in analytical_npvs]
+    risk_option_pnl = [x - mc_base_npv for x in mc_npvs]
+
     sp_values = []
     kstest_values = []
-
     for k in ratios:
         logger.info(
             f"Calculating FO and Risk P&Ls with a hedge value of {k} "
         )
-        analytical_npvs = []
-        mc_npvs = []
-        for spot in rand_spot:
-            # PV for analytical shocked, PV for MC shocked
-            proc = option_price.create_bsm_process(spot, vol, rfr, div)
-            option = option_price.create_option(
-                strike=strike,
-                maturity_date=ql.Date(15, 6, 2025),
-                process=proc,
-                pricer_type=option_price.PricerType.Analytical.name,
-                payoff=option_price.CallOrPut.CALL
-            )
-            analytical_npvs.append(option.NPV())
-
-            proc = option_price.create_bsm_process(spot, vol, rfr, div)
-            option = option_price.create_option(
-                strike=strike,
-                maturity_date=ql.Date(15, 6, 2025),
-                process= proc,
-                pricer_type=option_price.PricerType.Monte_Carlo.name,
-                payoff=option_price.CallOrPut.CALL
-            )
-            mc_npvs.append(option.NPV())
-
-        fo_option_pnl = [x - analytical_base_npv for x in analytical_npvs]
-        risk_option_pnl = [x - mc_base_npv for x in mc_npvs]
         fo_portfolio_pnl = [x - k*(y-base_spot) for x, y in zip(fo_option_pnl, rand_spot)]
         risk_portfolio_pnl = [x - k*(y-base_spot) for x, y in zip(risk_option_pnl, rand_spot)]
-
         sp_values.append(pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).spearman_value)
         kstest_values.append(pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).ks_value)
 
