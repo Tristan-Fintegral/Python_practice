@@ -6,6 +6,7 @@ class Gender:
     FEMALE = 'Female'
     GENDERS = [MALE, FEMALE]
 
+
 class Animal:
 
     def __init__(self, name):
