@@ -5,8 +5,6 @@ from matplotlib import pyplot
 import scenario_generator
 
 print('test')
-afeqf
-
 
 
 logger = logging.getLogger(__name__)
