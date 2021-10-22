@@ -4,6 +4,11 @@ import QuantLib as ql
 from matplotlib import pyplot
 import scenario_generator
 
+print('test')
+
+print('vs code is now working')
+
+
 logger = logging.getLogger(__name__)
 
 class OptionPricerType:
