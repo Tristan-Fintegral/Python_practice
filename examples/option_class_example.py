@@ -13,24 +13,38 @@ class Option(ABC):
         self.asset_name = asset_name
         self.strike = strike
         self.maturity = maturity
+        self._option_object = None
 
     @property
     @abstractmethod
     def call_or_put(self):
-        pass
+        raise NotImplementedError()
 
     @property
     @abstractmethod
     def exercise_type(self):
-        pass
+        raise NotImplementedError()
 
     @property
     @abstractmethod
     def pay_off_type(self):
-        pass
+        raise NotImplementedError()
+
+    @property
+    def option_object(self):
+        self._option_object = self._option_object or self.create_option_object()
+        return self._option_object
+
+    @abstractmethod
+    def create_option_object(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def price(self, market_data_object):
+        raise NotImplementedError()
 
 
-class EuropeanOption(Option, ABC):
+class EuropeanOption(Option):
 
     ANALYTICAL = 'ANALYTICAL'
     MONTE_CARLO = 'MONTE_CARLO'
@@ -48,6 +62,9 @@ class EuropeanOption(Option, ABC):
     @property
     def pay_off_type(self):
         return ql.PlainVanillaPayoff(self.call_or_put, self.strike)
+
+    def create_option_object(self):
+        return ql.VanillaOption(self.pay_off_type, self.exercise_type)
 
     def bsm_process(self, spot, vol, rfr, div):
         init_spot = ql.QuoteHandle(ql.SimpleQuote(spot))
@@ -78,9 +95,10 @@ class EuropeanOption(Option, ABC):
         bsm_process = self.bsm_process(
             spot=spot, vol=vol, rfr=rfr, div=div
         )
-        option = ql.VanillaOption(self.pay_off_type, self.exercise_type)
-        option.setPricingEngine(self.option_model(process=bsm_process))
-        return option.NPV()
+
+        engine = self.option_model(process=bsm_process)
+        self.option_object.setPricingEngine(engine)
+        return self.option_object.NPV()
 
     def price(self, market_data_object):
         # TODO -> unpack market_data_object later into self._price
@@ -109,18 +127,16 @@ class EuropeanBinaryCallOption(EuropeanCallOption):
 
 
 def main():
-    euro_call = EuropeanOption(
-        asset_name='Asset',
-        strike=120,
-        maturity=datetime.date(2025, 11, 21),
-        pricing_engine=EuropeanOption.MONTE_CARLO
-    )
+    asset_name = 'Asset'
+    strike = 120
+    maturity = datetime.date(2025, 11, 21)
 
     euro_bin_call = EuropeanBinaryCallOption(
-        asset_name='Asset',
-        strike=120,
-        maturity=datetime.date(2025, 11, 21)
+        asset_name=asset_name,
+        strike=strike,
+        maturity=maturity
     )
+    euro_bin_call.price('alex')
 
 
 if __name__ == '__main__':
