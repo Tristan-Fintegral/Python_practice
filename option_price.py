@@ -6,6 +6,8 @@ import scenario_generator
 
 print('test')
 
+print('vs code is now working')
+
 
 logger = logging.getLogger(__name__)
 
