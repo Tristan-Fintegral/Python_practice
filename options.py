@@ -35,7 +35,6 @@ class EuropeanOption(Option):
                          )
 
     def option_object(self):
-        exercise_type = ql.EuropeanExercise(self.maturity)
         return ql.VanillaOption(self.payoff, self.exercise_type)
 
     def exercise_type(self):
@@ -85,17 +84,14 @@ class EuropeanOption(Option):
         return bsm_process
 
     def process(self):
-        process = self.bsm_process(spot=100, vol=0.1, rfr=0.02, div=0)
-        return process
+        return self.bsm_process(spot=100, vol=0.1, rfr=0.02, div=0)
 
     def model(self):
         return ql.AnalyticEuropeanEngine(self.process)
 
     def price(self):
-        self.option_object.setPricingEngine(self.model())
+        self.option_object.setPricingEngine(self.model)
         return self.option_object.NPV()
-
-
 
 
 def option_example():
@@ -112,13 +108,17 @@ def option_example():
     print(a.asset_name)
     print(a.maturity)
     print(a.strike)
+    print(a.exercise_type())
     print(a.right(right_type))
     print(a.payoff(payoff_type))
     print(a.bsm_process(spot, vol, rfr, div))
+    print(a.process())
     print(a.model())
     print(a.price())
 
 
-
 if __name__ == '__main__':
     option_example()
+
+
+
