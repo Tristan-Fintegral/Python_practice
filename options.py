@@ -115,6 +115,7 @@ def option_example():
     print(f"The price of the European Binary Put Option is {format(d.price(), '.3f')}")
 
 
+
 if __name__ == '__main__':
     option_example()
 
