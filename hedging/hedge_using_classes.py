@@ -5,6 +5,8 @@ import pla_stats
 import scenario_generator
 import option_price
 from matplotlib import pyplot
+import tristans_options
+from datetime import date
 
 #  FOCUS -> Logging, clean code, doc strings, well thought out functions
 
@@ -45,55 +47,52 @@ def hedging_example():
     vol = 0.1
     strike = 100
     rfr = 0.05
-    div = 0.05
+    div = 0
     n_ratios = 30
+    maturity=date(2022, 10, 15)
     ratios = np.linspace(0, 1, n_ratios)
     shocks = scenario_generator.generate_log_normal_shocks(
         vol=vol, num_shocks=100
     )
     rand_spot = base_spot * shocks
 
-    proc = option_price.create_bsm_process(base_spot, vol, rfr, div)
-    option = option_price.create_option(
-        strike,
-        ql.Date(15, 10, 2025),
-        proc,
-        pricer_type=option_price.PricerType.Analytical.name,
-        payoff=option_price.CallOrPut.CALL
+    euro_bin_call = tristans_options.EuropeanCallOption(
+        asset_name='asset',
+        strike=strike,
+        maturity=maturity,
+        pricing_engine='ANALYTICAL'
     )
-    analytical_base_npv = option.NPV()
-    option = option_price.create_option(
-        strike,
-        ql.Date(15, 10, 2025),
-        proc,
-        pricer_type=option_price.PricerType.Monte_Carlo.name,
-        payoff=option_price.CallOrPut.CALL
+
+    analytical_base_npv = euro_bin_call._price(base_spot, vol, rfr, div)
+
+    euro_bin_call = tristans_options.EuropeanCallOption(
+        asset_name='asset',
+        strike=strike,
+        maturity=maturity,
+        pricing_engine='MONTE_CARLO'
     )
-    mc_base_npv = option.NPV()
+    mc_base_npv = euro_bin_call._price(base_spot, vol, rfr, div)
 
     analytical_npvs = []
     mc_npvs = []
     for spot in rand_spot:
         # PV for analytical shocked, PV for MC shocked
-        proc = option_price.create_bsm_process(spot, vol, rfr, div)
-        option = option_price.create_option(
-            strike=strike,
-            maturity_date=ql.Date(15, 10, 2025),
-            process=proc,
-            pricer_type=option_price.PricerType.Analytical.name,
-            payoff=option_price.CallOrPut.CALL
-        )
-        analytical_npvs.append(option.NPV())
+        euro_bin_call = tristans_options.EuropeanCallOption(
+        asset_name='asset',
+        strike=strike,
+        maturity=maturity,
+        pricing_engine='ANALYTICAL'
+    )
+        analytical_npvs.append(euro_bin_call._price(spot, vol, rfr, div))
 
-        proc = option_price.create_bsm_process(spot, vol, rfr, div)
-        option = option_price.create_option(
-            strike=strike,
-            maturity_date=ql.Date(15, 10, 2025),
-            process= proc,
-            pricer_type=option_price.PricerType.Monte_Carlo.name,
-            payoff=option_price.CallOrPut.CALL
-        )
-        mc_npvs.append(option.NPV())
+        euro_bin_call = tristans_options.EuropeanCallOption(
+        asset_name='asset',
+        strike=strike,
+        maturity=maturity,
+        pricing_engine='MONTE_CARLO'
+    )
+
+        mc_npvs.append(euro_bin_call._price(spot, vol, rfr, div))
 
     fo_option_pnl = [x - analytical_base_npv for x in analytical_npvs]
     risk_option_pnl = [x - mc_base_npv for x in mc_npvs]
