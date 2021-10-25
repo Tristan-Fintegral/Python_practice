@@ -101,11 +101,6 @@ class EuropeanOption(Option):
         return option_obj.NPV()
 
 
-
-
-
-
-
 def option_example():
     asset_name = 'aapl'
     strike = 100
@@ -118,13 +113,6 @@ def option_example():
     print(f"The price of the European Binary Call Option is {format(c.price(), '.3f')}")
     d = EuropeanOption(asset_name, strike, maturity, 'put', 'binary')
     print(f"The price of the European Binary Put Option is {format(d.price(), '.3f')}")
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
