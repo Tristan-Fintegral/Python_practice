@@ -23,48 +23,52 @@ class Option:
         self.asset_name = asset_name
         self.strike = strike
         self.maturity = maturity
-        print("This is a test option")
 
 
 class EuropeanOption(Option):
-    def __init__(self, asset_name, strike, maturity, right_type):
-        self.right_type = right_type
-        super().__init__(asset_name=asset_name,
-                         strike=strike,
-                         maturity=maturity
-                         )
+    def __init__(self, asset_name, strike, maturity, right, payoff):
+        super().__init__(
+            asset_name=asset_name,
+            strike=strike,
+            maturity=maturity
+        )
+        self.right = self.validate_right(right)
+        self.payoff = self.validate_payoff(payoff)
 
+    @property
     def option_object(self):
-        return ql.VanillaOption(self.payoff, self.exercise_type)
+        option_obj = ql.VanillaOption(self.payoff, self.exercise_type)
+        return option_obj
 
+    @property
     def exercise_type(self):
         return ql.EuropeanExercise(self.maturity)
 
-    def payoff(self, payoff_type):
-        binary = 'binary'
-        vanilla = 'vanilla'
-        payoff_types = [binary, vanilla]
-
-        if payoff_type not in payoff_types:
-            raise RuntimeError(f"payoff_type must be either 'binary' or 'vanilla'.")
-        elif payoff_type == binary:
-            return ql.CashOrNothingPayoff(self.right(self.right_type), self.strike, 1)
-        elif payoff_type == vanilla:
-            return ql.PlainVanillaPayoff(self.right(self.right_type), self.strike)
-
-    def right(self, right_type):
+    @staticmethod
+    def validate_right(right_in):
         call = 'call'
         put = 'put'
-        all_rights = [call, put]
 
-        if right_type not in all_rights:
-            raise RuntimeError(f"right_type must be either 'call' or 'put'.")
-        elif right_type == call:
+        if right_in == call:
             return ql.Option.Call
-        elif right_type == put:
+        elif right_in == put:
             return ql.Option.Put
+        else:
+            raise RuntimeError(f"Right must be either 'call' or 'put', not {right_in}.")
 
-    def bsm_process(self, spot, vol, rfr, div):
+    def validate_payoff(self, payoff_in):
+        binary = 'binary'
+        vanilla = 'vanilla'
+
+        if payoff_in == binary:
+            return ql.CashOrNothingPayoff(self.right, self.strike, 1)
+        elif payoff_in == vanilla:
+            return ql.PlainVanillaPayoff(self.right, self.strike)
+        else:
+            raise RuntimeError(f"Payoff_type must be either 'binary' or 'vanilla' and not {payoff_in}.")
+
+    @staticmethod
+    def bsm_process(spot, vol, rfr, div):
         init_spot = ql.QuoteHandle(ql.SimpleQuote(spot))
         today = ql.Date().todaysDate()
         rfr_ts = ql.YieldTermStructureHandle(
@@ -83,42 +87,46 @@ class EuropeanOption(Option):
         )
         return bsm_process
 
+    @property
     def process(self):
         return self.bsm_process(spot=100, vol=0.1, rfr=0.02, div=0)
 
+    @property
     def model(self):
         return ql.AnalyticEuropeanEngine(self.process)
 
     def price(self):
-        self.option_object.setPricingEngine(self.model)
-        return self.option_object.NPV()
+        option_obj = self.option_object
+        option_obj.setPricingEngine(self.model)
+        return option_obj.NPV()
+
+
+
+
+
 
 
 def option_example():
     asset_name = 'aapl'
     strike = 100
     maturity = ql.Date(25, 10, 2025)
-    spot = 100
-    vol = 0.1
-    rfr = 0.02
-    div = 0.1
-    right_type = 'call'
-    payoff_type = 'vanilla'
-    a = EuropeanOption(asset_name, strike, maturity, right_type)
-    print(a.asset_name)
-    print(a.maturity)
-    print(a.strike)
-    print(a.exercise_type())
-    print(a.right(right_type))
-    print(a.payoff(payoff_type))
-    print(a.bsm_process(spot, vol, rfr, div))
-    print(a.process())
-    print(a.model())
-    print(a.price())
+    a = EuropeanOption(asset_name, strike, maturity,'call', 'vanilla')
+    print(f"The price of the European Vanilla Call Option is {format(a.price(), '.3f')}")
+    b = EuropeanOption(asset_name, strike, maturity, 'put', 'vanilla')
+    print(f"The price of the European Vanilla Put Option is {format(b.price(), '.3f')}")
+    c = EuropeanOption(asset_name, strike, maturity, 'call', 'binary')
+    print(f"The price of the European Binary Call Option is {format(c.price(), '.3f')}")
+    d = EuropeanOption(asset_name, strike, maturity, 'put', 'binary')
+    print(f"The price of the European Binary Put Option is {format(d.price(), '.3f')}")
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
     option_example()
-
-
 
