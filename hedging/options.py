@@ -57,6 +57,17 @@ class VanillaOption(Option):
     def create_option_object(self):
         return ql.VanillaOption(self.pay_off_type, self.exercise_type)
 
+    def validate_pricing_engine_input(self, pricing_engine_input):
+        if pricing_engine_input not in [self.ANALYTICAL, self.MONTE_CARLO]:
+            raise NotImplementedError
+        else:
+            return pricing_engine_input
+
+    def default_mc(self, mc_param_input):
+        if mc_param_input == None:
+            return {'steps': 100, 'num_paths': 10000, 'rng': 'pseudorandom'}
+        else:
+            return mc_param_input
 
 class EuropeanOption(VanillaOption):
 
@@ -68,13 +79,8 @@ class EuropeanOption(VanillaOption):
             asset_name=asset_name, strike=strike, maturity=maturity
         )
         self.pricing_engine = self.validate_pricing_engine_input(pricing_engine)
-        self.mc_params=mc_params
+        self.mc_params=self.default_mc(mc_params)
 
-    def validate_pricing_engine_input(self, pricing_engine_input):
-        if pricing_engine_input not in [self.ANALYTICAL, self.MONTE_CARLO]:
-            raise RuntimeError()        
-        else:
-            return pricing_engine_input
 
     @property
     def exercise_type(self):
@@ -84,9 +90,9 @@ class EuropeanOption(VanillaOption):
         if self.pricing_engine == self.ANALYTICAL:
             return ql.AnalyticEuropeanEngine(process)
         elif self.pricing_engine == self.MONTE_CARLO:
-            steps = self._mc_params['steps']
-            rng = self._mc_params['rng']
-            num_paths = self._mc_params['num_paths']
+            steps = self.mc_params['steps']
+            rng = self.mc_params['rng']
+            num_paths = self.mc_params['num_paths']
             return ql.MCEuropeanEngine(process, rng, steps, requiredSamples=num_paths)
             
 
@@ -125,15 +131,17 @@ class EuropeanOption(VanillaOption):
 class AmericanOption(VanillaOption):
 
     MONTE_CARLO = 'MONTE_CARLO'
+    ANALYTICAL = 'ANALYTICAL'
 
     def __init__(self, asset_name, strike, maturity, pricing_engine,
-                earliest_date, mc_params):
+                earliest_date, mc_params=None):
         super(AmericanOption, self).__init__(
             asset_name=asset_name, strike=strike, maturity=maturity
         )
-        self.pricing_engine = pricing_engine
+        self.pricing_engine = self.validate_pricing_engine_input(pricing_engine)
+        self.mc_params = self.default_mc(mc_params)
         self.earliest_date = earliest_date
-        self.mc_params = mc_params
+
 
     @property
     def exercise_type(self):
@@ -208,6 +216,7 @@ def main():
         strike=strike,
         maturity=maturity,
         pricing_engine=EuropeanOption.ANALYTICAL
+
     )
 
     amer_call = AmericanCallOption(
@@ -215,8 +224,7 @@ def main():
         strike=strike,
         maturity=maturity,
         pricing_engine=AmericanOption.MONTE_CARLO,
-        earliest_date=date.today(),
-        mc_params={'steps': 1, 'num_paths': 10000, 'rng': 'pseudorandom'}
+        earliest_date=date.today()
     )
 
     print(euro_call._price(spot=100, vol=0.1, rfr=0.02, div=0))
