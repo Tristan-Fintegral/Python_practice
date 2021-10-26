@@ -1,7 +1,6 @@
 import enum
 import logging
 import QuantLib as ql
-from matplotlib import pyplot
 import scenario_generator
 
 print('test')
@@ -10,6 +9,9 @@ print('vs code is now working')
 
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_MC_TIMES_STEPS = 1
+DEFAULT_MC_PATHS = 1000
 
 class OptionPricerType:
     ANALYTICAL = 'Analytical'
@@ -66,7 +68,12 @@ def create_bsm_process(spot, vol, rfr, div):
 
 
 def create_option(
-        strike, maturity_date, process, pricer_type=None, payoff=None
+        strike,
+        maturity_date,
+        process,
+        pricer_type=None,
+        payoff=None,
+        config=None,
 ):
     """
     This function creates call option using BSM pricer
@@ -76,15 +83,19 @@ def create_option(
     :param int strike: strike price of option
     :param datetime maturity_date: maturity date of option
     """
+    config = config or {}
     pricer_type = pricer_type or PricerType(1).name
+
     if pricer_type not in PricerType._member_names_:
         raise RuntimeError(f'Pricer Not Considered')
     if pricer_type == PricerType.Analytical.name:
         engine = ql.AnalyticEuropeanEngine(process)
     elif pricer_type == PricerType.Monte_Carlo.name:
         rng = "pseudorandom"  # could use "lowdiscrepancy"
+        time_steps = config.get('time_steps', DEFAULT_MC_TIMES_STEPS)
+        number_mc_paths = config.get('number_mc_paths', DEFAULT_MC_PATHS)
         engine = ql.MCEuropeanEngine(
-            process, rng, timeSteps=1, requiredSamples=10000
+            process, rng, timeSteps=time_steps, requiredSamples=number_mc_paths
         )
     else:
         raise RuntimeError(f'Pricer considered but not yet implemented')

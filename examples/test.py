@@ -1,7 +1,6 @@
 import logging
 from collections import namedtuple
-import scenario_generator
-import option_price
+from hedging import option_price, scenario_generator
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
