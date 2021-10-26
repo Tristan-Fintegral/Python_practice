@@ -51,11 +51,17 @@ class EuropeanOption(Option):
     ANALYTICAL = 'ANALYTICAL'
     MONTE_CARLO = 'MONTE_CARLO'
 
-    def __init__(self, asset_name, strike, maturity, pricing_engine):
+    def __init__(self, asset_name, strike, maturity, pricing_engine=ANALYTICAL):
         super(EuropeanOption, self).__init__(
             asset_name=asset_name, strike=strike, maturity=maturity
         )
-        self.pricing_engine = pricing_engine
+        self.pricing_engine = self.validate_pricing_engine_input(pricing_engine)
+
+    def validate_pricing_engine_input(self, pricing_engine_input):
+        if pricing_engine_input not in [self.ANALYTICAL, self.MONTE_CARLO]:
+            raise RuntimeError()        # TODO -> fill in error
+        else:
+            return pricing_engine_input
 
     @property
     def exercise_type(self):
@@ -95,6 +101,8 @@ class EuropeanOption(Option):
             rng = "pseudorandom" # could use "lowdiscrepancy"
             numPaths = 10000 
             return ql.MCEuropeanEngine(process, rng, steps, requiredSamples=numPaths)
+        else:
+            raise RuntimeError()  # TODO ->
 
     def _price(self, spot, vol, rfr, div):
         bsm_process = self.bsm_process(
@@ -133,27 +141,38 @@ class EuropeanBinaryCallOption(EuropeanCallOption):
 
 class AmericanOption(EuropeanOption):
 
-    ANALYTICAL = 'ANALYTICAL'
     MONTE_CARLO = 'MONTE_CARLO'
 
-    def __init__(self, asset_name, strike, maturity, earliest_date, pricing_engine=MONTE_CARLO):
+    def __init__(
+            self,
+            asset_name,
+            strike,
+            maturity,
+            earliest_date,
+            pricing_engine=MONTE_CARLO
+    ):
         super(EuropeanOption, self).__init__(
             asset_name=asset_name, strike=strike, maturity=maturity
         )
         self.pricing_engine = pricing_engine
         self.earliest_date = earliest_date
+        self.mc_params = {'steps': 100, 'num_paths': 10000, 'rng': 'pseudorandom'}
 
     @property
     def exercise_type(self):
         return ql.AmericanExercise(to_ql_dt(self.earliest_date),to_ql_dt(self.maturity))
 
+    def set_mc_params(self, steps=100, num_paths=10000, rng='pseudorandom'):
+        mc_param_dict = {'steps': steps, 'num_paths': num_paths, 'rng': rng}
+        self._mc_params = mc_param_dict
 
     def option_model(self, process):
-        steps = 1
-        rng = "pseudorandom" # could use "lowdiscrepancy"
-        numPaths = 100000
+
         if self.pricing_engine == self.MONTE_CARLO:
-            return ql.MCAmericanEngine(process, rng, steps, requiredSamples=numPaths)
+            steps = self._mc_params['steps']
+            rng = self._mc_params['rng']
+            num_paths = self._mc_params['num_paths']
+            return ql.MCAmericanEngine(process, rng, steps, requiredSamples=num_paths)
         elif self.pricing_engine == self.ANALYTICAL:
             return None
 
@@ -169,13 +188,13 @@ def main():
     asset_name = 'Asset'
     strike = 120
     maturity = datetime.date(2025, 11, 21)
-    pricing_engine='MONTE_CARLO'
+    pricing_engine = 'MONTE_CARLO'
 
     euro_bin_call = EuropeanCallOption(
         asset_name=asset_name,
         strike=strike,
         maturity=maturity,
-        pricing_engine=pricing_engine
+        pricing_engine='Nonsense'
     )
 
     amer_bin_call = AmericanCallOption(
