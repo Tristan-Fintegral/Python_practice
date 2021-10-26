@@ -4,6 +4,10 @@ from abc import ABC, abstractmethod
 import QuantLib as ql
 from QuantLib.QuantLib import PricingEngine
 
+# TODO 1) Change American option to not inherit off European
+# TODO 2) Consider adding a class below American and European, or moving code up to Option
+# TODO 3) Switch Monte Carlo parameters to a named tuple and implement in European as well
+
 
 def to_ql_dt(dt):
     return ql.Date(dt.day, dt.month, dt.year)
