@@ -12,7 +12,7 @@ class TestPortfolio(unittest.TestCase):
         self.instruments = [MagicMock() for pv in self.pvs]
         for i, _ in enumerate(self.instruments):
             self.instruments[i].price.return_value = self.pvs[i]
-        self.market_data_object = MagicMock()
+        self.market_data_objects = [MagicMock() for pv in self.pvs]
 
     def test_price_one_deal(self):
         """Test the pricing of a portfolio with one deal."""
@@ -20,8 +20,20 @@ class TestPortfolio(unittest.TestCase):
         portfolio_A = portfolio_object.Portfolio()
         portfolio_A.create_deal(instrument=self.instruments[0], quantity=self.quantities[0])
 
-        actual = portfolio_A.price(self.market_data_object)
+        actual = portfolio_A.price(self.market_data_objects[0])
         expected = 100
+        self.assertEqual(expected, actual)
+
+    def test_price_multiple_deals(self):
+        """Test the pricing(Total PV) of a portfolio with multiple deals after each deal is added."""
+
+        actual = []
+        portfolio_A = portfolio_object.Portfolio()
+        for i in range(len(self.pvs)):
+            portfolio_A.create_deal(instrument=self.instruments[i], quantity=self.quantities[i])
+            actual.append(portfolio_A.price(self.market_data_objects[i]))
+
+        expected = [100, 500, 1400]
         self.assertEqual(expected, actual)
 
 
