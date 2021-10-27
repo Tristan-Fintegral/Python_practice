@@ -2,9 +2,9 @@ import unittest
 import datetime
 from unittest import mock
 import numpy as np
-from hedging.options import EuropeanCallOption
-from hedging.options import AmericanCallOption
-from hedging.options import AmericanOption
+from hedging.options_t import EuropeanCallOption
+from hedging.options_t import AmericanCallOption
+from hedging.options_t import AmericanOption
 
 
 class TestOptions(unittest.TestCase):
