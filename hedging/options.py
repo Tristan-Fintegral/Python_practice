@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 import QuantLib as ql
 from datetime import date
 
+from QuantLib.QuantLib import Payoff, StrikedTypePayoff
+
 
 def to_ql_dt(dt):
     return ql.Date(dt.day, dt.month, dt.year)
@@ -51,9 +53,18 @@ class Option(ABC):
 
     def validate_pricing_engine_input(self, pricing_engine_input):
         if pricing_engine_input not in self.valid_pricing_engines:
-            raise NotImplementedError
+            raise NotImplementedError('MODEL HAS NOT BEEN IMPLEMNTED')
         else:
             return pricing_engine_input
+
+    def __eq__(self, other):
+
+        equal_params = ['asset_name','strike','maturity', 'op_type']
+        option1_values = [self.__dict__[x] for x in equal_params]
+        option2_values = [other.__dict__[x] for x in equal_params]
+
+        return option1_values == option2_values and self.call_or_put == other.call_or_put
+
 
 
 class VanillaOption(Option, ABC):
@@ -91,6 +102,7 @@ class EuropeanOption(VanillaOption):
             mc_params=mc_params
         )
         self.pricing_engine = self.validate_pricing_engine_input(pricing_engine)
+        self.op_type= 'European'
 
     @property
     def exercise_type(self):
@@ -146,6 +158,7 @@ class EuropeanOption(VanillaOption):
 class AmericanOption(VanillaOption, ABC):
 
     MONTE_CARLO = 'MONTE_CARLO'
+    ANALYTICAL = 'ANALYTICAL'
 
     def __init__(
             self,
@@ -164,6 +177,10 @@ class AmericanOption(VanillaOption, ABC):
         self.earliest_date = earliest_date
 
     @property
+    def valid_pricing_engines(self):
+        return [self.MONTE_CARLO, self.ANALYTICAL]
+
+    @property
     def exercise_type(self):
         return ql.AmericanExercise(
             to_ql_dt(self.earliest_date), to_ql_dt(self.maturity)
@@ -176,8 +193,10 @@ class AmericanOption(VanillaOption, ABC):
             rng = self.mc_params['rng']
             num_paths = self.mc_params['num_paths']
             return ql.MCAmericanEngine(process, rng, steps, requiredSamples=num_paths)
+        elif self.pricing_engine == self.ANALYTICAL:
+            raise NotImplementedError("ANALYTICAL MODEL IS NOT IMPLEMNTED WITH AMERICAN OPTIONS") 
         else:
-            raise RuntimeError()        # TODO -> add meaningful error
+            raise NotImplementedError
 
     def bsm_process(self, spot, vol, rfr, div):
         init_spot = ql.QuoteHandle(ql.SimpleQuote(spot))
@@ -251,17 +270,21 @@ def main():
         pricing_engine=EuropeanOption.ANALYTICAL
     )
 
+    euro_call_1.__eq__(euro_call_2)
+
     amer_call = AmericanCallOption(
         asset_name=asset_name,
         strike=strike,
         maturity=maturity,
-        pricing_engine=AmericanOption.MONTE_CARLO,
+        pricing_engine=AmericanOption.ANALYTICAL,
         earliest_date=date.today()
     )
 
     print(euro_call._price(spot=100, vol=0.1, rfr=0.02, div=0))
     print(amer_call._price(spot=100, vol=0.1, rfr=0.02, div=0))
 
+
+    euro_call_1.__dict__
 
 if __name__ == '__main__':
     main()
