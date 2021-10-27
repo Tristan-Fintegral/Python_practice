@@ -2,7 +2,7 @@ import datetime
 from abc import ABC, abstractmethod
 import QuantLib as ql
 from datetime import date
-
+from instruments.instrument import BaseInstrument
 from QuantLib.QuantLib import Payoff, StrikedTypePayoff
 
 
@@ -10,8 +10,10 @@ def to_ql_dt(dt):
     return ql.Date(dt.day, dt.month, dt.year)
 
 
-class Option(ABC):
+class Option(BaseInstrument, ABC):
+    
     def __init__(self, asset_name, strike, maturity):
+        super().__init__()
         self.asset_name = asset_name
         self.strike = strike
         self.maturity = maturity
@@ -68,6 +70,7 @@ class Option(ABC):
 
 
 class VanillaOption(Option, ABC):
+    
     def __init__(self, asset_name, strike, maturity, mc_params=None):
         super(VanillaOption, self).__init__(
             asset_name=asset_name, strike=strike, maturity=maturity
