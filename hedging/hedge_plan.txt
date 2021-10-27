@@ -1,0 +1,21 @@
+Project Plan
+
+Structure:
+1) Create 100 Market Data Objects (MDO)
+2) Create a portfolio of 1 Option and k stocks
+3) Iterate over MDOs to price portfolio
+4) Switch pricing engine and iterate over MDOs to price portfolios
+
+Tasks and Responsibilities
+1) Option Class        (Tristan)
+      - Takes in MDO and prices
+2) Stock Class         (Nikolas)
+      - Take in MDO and price
+3) Market Data Object  (Alex)
+      - Be created to hold all market data for 1 day
+      - Return when requested market data for a specified asset
+4) Portfolio Object    (Anish)
+      - Hold a set of Options and Stocks
+      - Be able to price the portfolio when passed a MDO
+5) Hedged portfolios   (Tristan)
+      - Runs the code that creates the output

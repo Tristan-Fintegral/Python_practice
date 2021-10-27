@@ -9,7 +9,10 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-PlaResult = namedtuple('PlaResultV2', ['ks_value', 'ks_pvalue', 'spearman_value', 'spearman_pvalue'])
+PlaResult = namedtuple(
+    'PlaResultV2',
+    ['ks_value', 'ks_pvalue', 'spearman_value', 'spearman_pvalue']
+)
 
 
 def pla_stats(fo_pnl, risk_pnl):
@@ -31,14 +34,19 @@ def pla_stats(fo_pnl, risk_pnl):
     ks_results = ks_2samp(fo_pnl, risk_pnl)
     spearcorr_results = spearmanr(fo_pnl, risk_pnl)
 
-    return PlaResult(ks_value=ks_results.statistic, ks_pvalue=ks_results.pvalue,
-                     spearman_value=spearcorr_results.correlation, spearman_pvalue=spearcorr_results.pvalue)
+    return PlaResult(
+        ks_value=ks_results.statistic,
+        ks_pvalue=ks_results.pvalue,
+        spearman_value=spearcorr_results.correlation,
+        spearman_pvalue=spearcorr_results.pvalue
+    )
 
 
 def main():
     pla_result = pla_stats([1, 2, 3, 4, 5], [2, 3, 4, 5, 5])
     logger.info(f'PLA stats returned {pla_result.ks_result} & {pla_result.spear_result}.')
-    pla_result.ks_result.pvalue
+    pla_result.ks_value
+    pla_result.spearman_pvalue
 
 
 if __name__ == '__main__':

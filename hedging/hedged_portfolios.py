@@ -1,7 +1,6 @@
 import numpy as np
 import logging
 import QuantLib as ql
-from scipy import stats
 import pla_stats
 import scenario_generator
 import option_price
@@ -45,29 +44,31 @@ def hedging_example():
     base_spot = 100
     vol = 0.1
     strike = 100
-    rfr = 0.005
-    div = 0
-    n_ratios = 20
+    rfr = 0.05
+    div = 0.05
+    n_ratios = 30
     ratios = np.linspace(0, 1, n_ratios)
     shocks = scenario_generator.generate_log_normal_shocks(
-        vol=vol, num_shocks=300
+        vol=vol, num_shocks=100
     )
     rand_spot = base_spot * shocks
 
     proc = option_price.create_bsm_process(base_spot, vol, rfr, div)
-    option = option_price.create_option(strike,
-                                        ql.Date(15, 10, 2022),
-                                        proc,
-                                        pricer_type=option_price.PricerType.Analytical.name,
-                                        payoff=option_price.CallOrPut.CALL
-                                        )
+    option = option_price.create_option(
+        strike,
+        ql.Date(15, 10, 2025),
+        proc,
+        pricer_type=option_price.PricerType.Analytical.name,
+        payoff=option_price.CallOrPut.CALL
+    )
     analytical_base_npv = option.NPV()
-    option = option_price.create_option(strike,
-                                        ql.Date(15, 10, 2022),
-                                        proc,
-                                        pricer_type=option_price.PricerType.Monte_Carlo.name,
-                                        payoff=option_price.CallOrPut.CALL
-                                        )
+    option = option_price.create_option(
+        strike,
+        ql.Date(15, 10, 2025),
+        proc,
+        pricer_type=option_price.PricerType.Monte_Carlo.name,
+        payoff=option_price.CallOrPut.CALL
+    )
     mc_base_npv = option.NPV()
 
     analytical_npvs = []
@@ -77,7 +78,7 @@ def hedging_example():
         proc = option_price.create_bsm_process(spot, vol, rfr, div)
         option = option_price.create_option(
             strike=strike,
-            maturity_date=ql.Date(15, 10, 2022),
+            maturity_date=ql.Date(15, 10, 2025),
             process=proc,
             pricer_type=option_price.PricerType.Analytical.name,
             payoff=option_price.CallOrPut.CALL
@@ -87,7 +88,7 @@ def hedging_example():
         proc = option_price.create_bsm_process(spot, vol, rfr, div)
         option = option_price.create_option(
             strike=strike,
-            maturity_date=ql.Date(15, 10, 2022),
+            maturity_date=ql.Date(15, 10, 2025),
             process= proc,
             pricer_type=option_price.PricerType.Monte_Carlo.name,
             payoff=option_price.CallOrPut.CALL
@@ -106,7 +107,8 @@ def hedging_example():
         fo_portfolio_pnl = [x - k*(y-base_spot) for x, y in zip(fo_option_pnl, rand_spot)]
         risk_portfolio_pnl = [x - k*(y-base_spot) for x, y in zip(risk_option_pnl, rand_spot)]
         sp_values.append(pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).spearman_value)
-        kstest_values.append(pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).ks_value)
+        kstest_values.append(
+            pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).ks_value)
 
     fig = pyplot.figure()
     ax1 = fig.add_subplot(121)
@@ -122,7 +124,6 @@ def hedging_example():
     ax2.set_xlabel('Hedge Ratio')
     ax2.set_ylabel('Spearman Correlation')
     pyplot.show()
-
 
 if __name__ == '__main__':
     hedging_example()

@@ -15,6 +15,10 @@ def generate_log_normal_shocks(vol, num_shocks=780):
     :param int num_shocks: Number of shocks to produce
     :return [int]: Vector of shocks
     """
+
+    if vol < 0:
+        raise TypeError(f"Vol must be zero or greater, not {vol}.")
+
     rand_norm_vector = np.random.normal(loc=0, scale=1, size=num_shocks)
     shock_vector = np.exp(vol * rand_norm_vector)
 
@@ -26,9 +30,6 @@ def main():
     shocks = generate_log_normal_shocks(vol=0.6, num_shocks=10000)
     rel_shocks = shocks + 1
 
-    #pyplot.hist(shocks, bins=100)
-    #pyplot.hist(shocks, bins=100)
-    #pyplot.show()
     prices=[None]*len(shocks)
     prices[0]=1
     for i in range(1,len(shocks)):
