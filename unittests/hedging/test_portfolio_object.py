@@ -1,6 +1,6 @@
 import unittest
 import datetime
-from hedging import portfolio_object
+from core import portfolio
 from unittest.mock import MagicMock
 
 
@@ -17,7 +17,7 @@ class TestPortfolio(unittest.TestCase):
     def test_price_one_deal(self):
         """Test the pricing of a portfolio with one deal."""
 
-        portfolio_A = portfolio_object.Portfolio()
+        portfolio_A = portfolio.Portfolio()
         portfolio_A.create_deal(instrument=self.instruments[0], quantity=self.quantities[0])
 
         actual = portfolio_A.price(self.market_data_objects[0])
@@ -28,7 +28,7 @@ class TestPortfolio(unittest.TestCase):
         """Test the pricing(Total PV) of a portfolio with multiple deals after each deal is added."""
 
         actual = []
-        portfolio_A = portfolio_object.Portfolio()
+        portfolio_A = portfolio.Portfolio()
         for i in range(len(self.pvs)):
             portfolio_A.create_deal(instrument=self.instruments[i], quantity=self.quantities[i])
             actual.append(portfolio_A.price(self.market_data_objects[i]))
@@ -44,7 +44,7 @@ class TestDeal(unittest.TestCase):
         instrument = 'Option'
         quantity = 10
 
-        deal = portfolio_object.Deal(
+        deal = portfolio.Deal(
             instrument=instrument,
             quantity=quantity,
             creation_time=datetime.datetime(2021, 10, 21, 10, 0, 0)

@@ -1,19 +1,20 @@
 import numpy as np
 import logging
-import QuantLib as ql
+import datetime
 import pla_stats
 import scenario_generator
-import option_price
+from core import portfolio
+from instruments.equity import options, stocks
 from matplotlib import pyplot
-
-#  FOCUS -> Logging, clean code, doc strings, well thought out functions
+from market_data import asset_data, market_base
 
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
-# logging.basicConfig(
-#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-#     level=logging.INFO
 
 def hedging_example():
     """
@@ -41,74 +42,65 @@ def hedging_example():
     4) Plot KS test and Spearman Corr as a function of k
     :return:
     """
+    asset_name = 'TestAsset'
     base_spot = 100
-    vol = 0.1
+    vol = 0.2
     strike = 100
     rfr = 0.05
-    div = 0.05
+
     n_ratios = 30
+    maturity = datetime.date(2025, 1, 1)
     ratios = np.linspace(0, 1, n_ratios)
     shocks = scenario_generator.generate_log_normal_shocks(
         vol=vol, num_shocks=100
     )
     rand_spot = base_spot * shocks
 
-    proc = option_price.create_bsm_process(base_spot, vol, rfr, div)
-    option = option_price.create_option(
-        strike,
-        ql.Date(15, 10, 2025),
-        proc,
-        pricer_type=option_price.PricerType.Analytical.name,
-        payoff=option_price.CallOrPut.CALL
+    rfr_asset = asset_data.InterestRateAssetMarketData(
+        asset_name='rfr', interest_rate=rfr
     )
-    analytical_base_npv = option.NPV()
-    option = option_price.create_option(
-        strike,
-        ql.Date(15, 10, 2025),
-        proc,
-        pricer_type=option_price.PricerType.Monte_Carlo.name,
-        payoff=option_price.CallOrPut.CALL
+
+    base_eq_asset = asset_data.EquityAssetMarketData(
+        asset_name=asset_name, spot=base_spot, volatility=vol
     )
-    mc_base_npv = option.NPV()
 
-    analytical_npvs = []
-    mc_npvs = []
-    for spot in rand_spot:
-        # PV for analytical shocked, PV for MC shocked
-        proc = option_price.create_bsm_process(spot, vol, rfr, div)
-        option = option_price.create_option(
-            strike=strike,
-            maturity_date=ql.Date(15, 10, 2025),
-            process=proc,
-            pricer_type=option_price.PricerType.Analytical.name,
-            payoff=option_price.CallOrPut.CALL
-        )
-        analytical_npvs.append(option.NPV())
+    base_mdo = market_base.MarketDataObject()
+    base_mdo.add_asset_data([rfr_asset, base_eq_asset])
 
-        proc = option_price.create_bsm_process(spot, vol, rfr, div)
-        option = option_price.create_option(
-            strike=strike,
-            maturity_date=ql.Date(15, 10, 2025),
-            process= proc,
-            pricer_type=option_price.PricerType.Monte_Carlo.name,
-            payoff=option_price.CallOrPut.CALL
-        )
-        mc_npvs.append(option.NPV())
+    shocked_eq_assets = [
+        asset_data.EquityAssetMarketData(
+            asset_name=asset_name, spot=shocked_spot, volatility=vol
+        ) for shocked_spot in rand_spot
+    ]
 
-    fo_option_pnl = [x - analytical_base_npv for x in analytical_npvs]
-    risk_option_pnl = [x - mc_base_npv for x in mc_npvs]
+    shocked_mdos = []
 
-    sp_values = []
-    kstest_values = []
-    for k in ratios:
-        logger.info(
-            f"Calculating FO and Risk P&Ls with a hedge value of {k} "
-        )
-        fo_portfolio_pnl = [x - k*(y-base_spot) for x, y in zip(fo_option_pnl, rand_spot)]
-        risk_portfolio_pnl = [x - k*(y-base_spot) for x, y in zip(risk_option_pnl, rand_spot)]
-        sp_values.append(pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).spearman_value)
-        kstest_values.append(
-            pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).ks_value)
+    for shocked_eq_asset in shocked_eq_assets:
+        mdo = market_base.MarketDataObject()
+        mdo.add_asset_data([rfr_asset, shocked_eq_asset])
+        shocked_mdos.append(mdo)
+
+    option = options.EuropeanCallOption(
+        asset_name=asset_name,
+        strike=strike,
+        maturity=maturity,
+        pricing_engine=options.EuropeanCallOption.ANALYTICAL
+    )
+    stock = stocks.Stock(asset_name=asset_name, num_shares=1)
+
+    opt_deal = portfolio.Deal(instrument=option, quantity=1)
+    stock_deals = [portfolio.Deal(instrument=stock, quantity=-x) for x in ratios]
+
+    portfolios = []
+
+    for stock_deal in stock_deals:
+        temp_portfolio = portfolio.Portfolio()
+        temp_portfolio.add_deal(stock_deal)
+        temp_portfolio.add_deal(opt_deal)
+        portfolios.append(temp_portfolio)
+
+    base_npvs = [x.price(base_mdo) for x in portfolios]
+
 
     fig = pyplot.figure()
     ax1 = fig.add_subplot(121)

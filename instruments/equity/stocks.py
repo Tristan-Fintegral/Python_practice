@@ -6,13 +6,14 @@ from instruments.instrument import BaseInstrument
 
 class Stock(BaseInstrument):
 
-    def __init__(self, stock_name, num_shares):
+    def __init__(self, asset_name, num_shares):
         super().__init__()
-        self.stock_name = stock_name
+        self.asset_name = asset_name
         self.num_shares = num_shares
 
-    def price(self, spot=100):
-        return self.num_shares * spot
+    def price(self, market_data_object):
+        asset = market_data_object.asset_lookup(self.asset_name)
+        return self.num_shares * asset.spot
 
 
 def stock_example():

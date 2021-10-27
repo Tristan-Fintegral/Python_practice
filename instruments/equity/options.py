@@ -142,8 +142,11 @@ class EuropeanOption(VanillaOption):
         return self.option_object.NPV()
 
     def price(self, market_data_object):
-        # -> unpack market_data_object later into self._price
-        return self._price(spot=100, vol=0.1, rfr=0.02, div=0)
+        asset = market_data_object.asset_lookup(self.asset_name)
+        rfr = market_data_object.asset_lookup('rfr')
+        return self._price(
+            spot=asset.spot, vol=asset.volatility, rfr=rfr.interest_rate, div=0
+        )
 
 
 class AmericanOption(VanillaOption, ABC):
