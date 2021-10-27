@@ -209,6 +209,8 @@ class AmericanOption(VanillaOption, ABC):
 
     def price(self, market_data_object):
         # -> unpack market_data_object later into self._price
+        asset_market_data = market_data_object.lookup(self.asset_name)
+        rfr = market_data_object.
         return self._price(spot=100, vol=0.1, rfr=0.02, div=0)
 
 
