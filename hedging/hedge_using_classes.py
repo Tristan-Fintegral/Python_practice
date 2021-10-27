@@ -1,6 +1,5 @@
 import numpy as np
 import logging
-import QuantLib as ql
 import pla_stats
 import scenario_generator
 import options_t
@@ -50,6 +49,7 @@ def hedging_example():
     rfr = 0.05
     div = 0.05
     maturity = datetime.date(2025, 11, 21)
+    mc_params = {"steps": 1, "num_paths": 10000, "rng": "pseudorandom"}
 
     n_ratios = 30
     ratios = np.linspace(0, 1, n_ratios)
@@ -70,7 +70,7 @@ def hedging_example():
         strike=strike,
         maturity=maturity,
         pricing_engine=options_t.EuropeanOption.MONTE_CARLO,
-        mc_params={"steps": 1, "num_paths": 10000, "rng": "pseudorandom"},
+        mc_params=mc_params
     )
     mc_base_npv = option._price(base_spot, vol, rfr, div)
 
@@ -92,7 +92,7 @@ def hedging_example():
             strike=strike,
             maturity=maturity,
             pricing_engine=options_t.EuropeanOption.MONTE_CARLO,
-            mc_params={"steps": 1, "num_paths": 10000, "rng": "pseudorandom"},
+            mc_params=mc_params
         )
         mc_npvs.append(option._price(spot, vol, rfr, div))
 

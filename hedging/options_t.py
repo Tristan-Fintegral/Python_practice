@@ -52,18 +52,18 @@ class Option(ABC):
 
     def validate_pricing_engine_input(self, pricing_engine_input):
         if pricing_engine_input not in self.valid_pricing_engines:
-            raise NotImplementedError("MODEL HAS NOT BEEN IMPLEMNTED")
+            raise NotImplementedError("MODEL HAS NOT BEEN IMPLEMENTED")
         else:
             return pricing_engine_input
 
     def __eq__(self, other):
 
-        equal_params = ["asset_name", "strike", "maturity", "op_type"]
+        equal_params = ["asset_name", "strike", "maturity"]
         option1_values = [self.__dict__[x] for x in equal_params]
         option2_values = [other.__dict__[x] for x in equal_params]
 
         return (
-            option1_values == option2_values and self.call_or_put == other.call_or_put
+            option1_values == option2_values and self.__class__ == other.__class__
         )
 
 
@@ -98,7 +98,6 @@ class EuropeanOption(VanillaOption):
             asset_name=asset_name, strike=strike, maturity=maturity, mc_params=mc_params
         )
         self.pricing_engine = self.validate_pricing_engine_input(pricing_engine)
-        self.op_type = "European"
 
     @property
     def exercise_type(self):
@@ -246,7 +245,7 @@ def main():
         pricing_engine=EuropeanOption.ANALYTICAL,
     )
 
-    euro_call_2 = EuropeanPutOption(
+    euro_call_2 = EuropeanCallOption(
         asset_name=asset_name,
         strike=strike,
         maturity=maturity,
