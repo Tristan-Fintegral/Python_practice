@@ -40,7 +40,6 @@ class TestPortfolio(unittest.TestCase):
 class TestDeal(unittest.TestCase):
 
     def test_deal_repr(self):
-        """ if model is not implemented, throw NotImplementedError """
         instrument = 'Option'
         quantity = 10
 
