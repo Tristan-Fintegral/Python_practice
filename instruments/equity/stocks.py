@@ -1,10 +1,13 @@
 """
 Create a class for storing stock holdings
 """
+from instruments.instrument import BaseInstrument
 
 
-class Stock:
+class Stock(BaseInstrument):
+
     def __init__(self, stock_name, num_shares):
+        super().__init__()
         self.stock_name = stock_name
         self.num_shares = num_shares
 
