@@ -1,5 +1,6 @@
 import datetime
 
+
 class Portfolio:
 
     def __init__(self):
@@ -18,18 +19,15 @@ class Portfolio:
         )
         self.add_deal(deal=deal)
 
-        if deal.quantity == 0:
-            self.remove_deal(deal=deal)
-
     def add_deal(self, deal):
         self.deals[self.deal_counter] = deal
         self.deal_counter += 1
 
     def price(self, market_data_object):
         total_pv = 0
-        for instrument, quantity in self.instrs.items():
-            instr_npv = instrument.price(market_data_object)
-            position_npv = instr_npv * quantity
+        for index, deal in self.deals.items():
+            instr_npv = deal.instrument.price(market_data_object)
+            position_npv = instr_npv * deal.quantity
             total_pv += position_npv
 
         return total_pv
