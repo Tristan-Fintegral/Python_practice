@@ -7,7 +7,7 @@ class Portfolio:
         self.deal_counter = 0
 
     def __repr__(self):
-        return
+        return '\n'.join([f'{key}: {val}' for key, val in self.deals.items()])
 
     def create_deal(self, instrument, quantity, counterparty=None, creation_time=None):
         deal = Deal(
@@ -25,9 +25,6 @@ class Portfolio:
         self.deals[self.deal_counter] = deal
         self.deal_counter += 1
 
-        if self.deals
-
-
     def price(self, market_data_object):
         total_pv = 0
         for instrument, quantity in self.instrs.items():
@@ -36,6 +33,12 @@ class Portfolio:
             total_pv += position_npv
 
         return total_pv
+
+    def deals_with_counterparty(self):
+        pass
+
+    def deals_on_instrument(self):
+        pass
 
 
 class Deal:
@@ -47,8 +50,10 @@ class Deal:
         self.counterparty = counterparty
 
     def __repr__(self):
-        return f'Deal(instrument={self.instrument}, quantity={self.quantity}, counterparty={self.counterparty}, ' \
-               f'creation_time={self.creation_time} '
+        return f'Deal(instrument={self.instrument}, ' \
+               f'quantity={self.quantity}, ' \
+               f'counterparty={self.counterparty}, ' \
+               f'creation_time={self.creation_time})'
 
 
 def main():

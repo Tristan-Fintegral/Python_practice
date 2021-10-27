@@ -6,6 +6,7 @@ from hedging.options import EuropeanCallOption
 from hedging.options import AmericanCallOption
 from hedging.options import AmericanOption
 
+
 class TestOptions(unittest.TestCase):
 
     def test_euro_options_models(self):
@@ -21,6 +22,7 @@ class TestOptions(unittest.TestCase):
                 maturity=maturity,
                 pricing_engine='Test'
             )
+
     def test_amer_options_models(self):
         """ if model is not implemented, throw NotImplementedError """
         asset_name = 'Asset'
