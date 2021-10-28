@@ -1,4 +1,5 @@
 import QuantLib as ql
+from market_data import MarketData
 
 
 class Option:
@@ -70,9 +71,15 @@ class EuropeanOption(Option):
         )
         return bsm_process
 
+    @staticmethod
+    def set_market_data(date, spot, vol, rfr, div):
+        raw_data = MarketData(date, spot, vol, rfr, div)
+        market_data = raw_data.make_market_data
+        return market_data
+
     @property
     def process(self):
-        return self.bsm_process(spot=100, vol=0.1, rfr=0.02, div=0)
+        return self.bsm_process(spot = market_data[date, "Spot"], vol=0.1, rfr=0.02, div=0)
 
     @property
     def model(self):

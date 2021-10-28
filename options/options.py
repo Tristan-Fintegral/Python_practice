@@ -19,6 +19,8 @@ import QuantLib as ql
 from european_option import EuropeanOption
 from american_option import AmericanOption
 from bermudan_option import BermudanOption
+import market_data
+
 
 def option_example():
     asset_name = 'aapl'
@@ -38,6 +40,10 @@ def option_example():
     print(f"The price of the American Vanilla Put Option is {format(f.price(), '.3f')}")
     print("=="*35)
     print("Cannot price a Bermudan option as I cannot find the right engine!")
+    print("==" * 35)
+    my_data = a.get_market_data()
+   # my_data.loc[, "Spot"]
+    #print(my_data)
 
 
 if __name__ == '__main__':

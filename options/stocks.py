@@ -18,5 +18,6 @@ def stock_example():
     aapl = Stock(stock_name,num_shares)
     print(f"I have {aapl.price()} of {stock_name} stock")
 
+
 if __name__ == '__main__':
     stock_example()

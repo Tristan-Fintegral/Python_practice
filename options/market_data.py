@@ -44,7 +44,8 @@ def test_data():
     my_data = MarketData(date, spot, vol, rfr, div)
     model_market_data = my_data.make_market_data
     print(model_market_data)
-    print(model_market_data.loc[date, "Spot"])
+    #print(model_market_data.loc[date, "Spot"])
+
 
 if __name__ == '__main__':
     test_data()
