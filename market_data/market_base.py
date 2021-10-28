@@ -42,7 +42,7 @@ class MarketDataObject:
 
 def main():
     from market_data import asset_data
-    eq_asset_md = asset_data.EquityAssetAssetMarketData(
+    eq_asset_md = asset_data.EquityAssetMarketData(
         asset_name='example_stock', spot=100, volatility=0.1
     )
     ir_asset_md = asset_data.InterestRateAssetMarketData(
