@@ -2,7 +2,7 @@ import numpy as np
 import logging
 import pla_stats
 import scenario_generator
-import options
+from instruments.equity import options
 from matplotlib import pyplot
 import datetime
 
@@ -42,6 +42,7 @@ def hedging_example():
     4) Plot KS test and Spearman Corr as a function of k
     :return:
     """
+
     asset_name = "Asset"
     base_spot = 100
     vol = 0.1
@@ -63,7 +64,7 @@ def hedging_example():
         pricing_engine=options.EuropeanOption.ANALYTICAL,
     )
 
-    analytical_base_npv = option._price(base_spot, vol, rfr, div)
+    analytical_base_npv = option.price(mrkt_data)
 
     option = options.EuropeanCallOption(
         asset_name=asset_name,
@@ -72,7 +73,7 @@ def hedging_example():
         pricing_engine=options.EuropeanOption.MONTE_CARLO,
         mc_params=mc_params
     )
-    mc_base_npv = option._price(base_spot, vol, rfr, div)
+    mc_base_npv = option.price(mrkt_data)
 
     analytical_npvs = []
     mc_npvs = []
@@ -85,7 +86,7 @@ def hedging_example():
             pricing_engine=options.EuropeanOption.ANALYTICAL,
         )
 
-        analytical_npvs.append(option._price(spot, vol, rfr, div))
+        analytical_npvs.append(option.price(mrkt_data))
 
         option = options.EuropeanCallOption(
             asset_name=asset_name,
@@ -94,7 +95,7 @@ def hedging_example():
             pricing_engine=options.EuropeanOption.MONTE_CARLO,
             mc_params=mc_params
         )
-        mc_npvs.append(option._price(spot, vol, rfr, div))
+        mc_npvs.append(option.price(mrkt_data))
 
     fo_option_pnl = [x - analytical_base_npv for x in analytical_npvs]
     risk_option_pnl = [x - mc_base_npv for x in mc_npvs]
