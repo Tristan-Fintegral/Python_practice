@@ -76,6 +76,10 @@ class TestOptions(unittest.TestCase):
         self.assertDictEqual(ret,expected_ret, 'Expect MC paramater dictionaries'
                                                'to be equal')
 
+    def test_negative_vol:
+
+    def test_negative_spot:
+
 
 
 
