@@ -1,12 +1,10 @@
 import numpy as np
 import logging
-import QuantLib as ql
 import pla_stats
 import scenario_generator
-import option_price
+import options
 from matplotlib import pyplot
-import tristans_options
-from datetime import date
+import datetime
 
 #  FOCUS -> Logging, clean code, doc strings, well thought out functions
 
@@ -16,6 +14,7 @@ logger = logging.getLogger(__name__)
 # logging.basicConfig(
 #     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 #     level=logging.INFO
+
 
 def hedging_example():
     """
@@ -43,56 +42,59 @@ def hedging_example():
     4) Plot KS test and Spearman Corr as a function of k
     :return:
     """
+    asset_name = "Asset"
     base_spot = 100
     vol = 0.1
     strike = 100
     rfr = 0.05
-    div = 0
+    div = 0.05
+    maturity = datetime.date(2025, 11, 21)
+    mc_params = {"steps": 1, "num_paths": 10000, "rng": "pseudorandom"}
+
     n_ratios = 30
-    maturity=date(2022, 10, 15)
     ratios = np.linspace(0, 1, n_ratios)
-    shocks = scenario_generator.generate_log_normal_shocks(
-        vol=vol, num_shocks=100
-    )
+    shocks = scenario_generator.generate_log_normal_shocks(vol=vol, num_shocks=100)
     rand_spot = base_spot * shocks
 
-    euro_bin_call = tristans_options.EuropeanCallOption(
-        asset_name='asset',
+    option = options.EuropeanCallOption(
+        asset_name=asset_name,
         strike=strike,
         maturity=maturity,
-        pricing_engine='ANALYTICAL'
+        pricing_engine=options.EuropeanOption.ANALYTICAL,
     )
 
-    analytical_base_npv = euro_bin_call._price(base_spot, vol, rfr, div)
+    analytical_base_npv = option._price(base_spot, vol, rfr, div)
 
-    euro_bin_call = tristans_options.EuropeanCallOption(
-        asset_name='asset',
+    option = options.EuropeanCallOption(
+        asset_name=asset_name,
         strike=strike,
         maturity=maturity,
-        pricing_engine='MONTE_CARLO'
+        pricing_engine=options.EuropeanOption.MONTE_CARLO,
+        mc_params=mc_params
     )
-    mc_base_npv = euro_bin_call._price(base_spot, vol, rfr, div)
+    mc_base_npv = option._price(base_spot, vol, rfr, div)
 
     analytical_npvs = []
     mc_npvs = []
     for spot in rand_spot:
         # PV for analytical shocked, PV for MC shocked
-        euro_bin_call = tristans_options.EuropeanCallOption(
-        asset_name='asset',
-        strike=strike,
-        maturity=maturity,
-        pricing_engine='ANALYTICAL'
-    )
-        analytical_npvs.append(euro_bin_call._price(spot, vol, rfr, div))
+        option = options.EuropeanCallOption(
+            asset_name=asset_name,
+            strike=strike,
+            maturity=maturity,
+            pricing_engine=options.EuropeanOption.ANALYTICAL,
+        )
 
-        euro_bin_call = tristans_options.EuropeanCallOption(
-        asset_name='asset',
-        strike=strike,
-        maturity=maturity,
-        pricing_engine='MONTE_CARLO'
-    )
+        analytical_npvs.append(option._price(spot, vol, rfr, div))
 
-        mc_npvs.append(euro_bin_call._price(spot, vol, rfr, div))
+        option = options.EuropeanCallOption(
+            asset_name=asset_name,
+            strike=strike,
+            maturity=maturity,
+            pricing_engine=options.EuropeanOption.MONTE_CARLO,
+            mc_params=mc_params
+        )
+        mc_npvs.append(option._price(spot, vol, rfr, div))
 
     fo_option_pnl = [x - analytical_base_npv for x in analytical_npvs]
     risk_option_pnl = [x - mc_base_npv for x in mc_npvs]
@@ -100,14 +102,19 @@ def hedging_example():
     sp_values = []
     kstest_values = []
     for k in ratios:
-        logger.info(
-            f"Calculating FO and Risk P&Ls with a hedge value of {k} "
+        logger.info(f"Calculating FO and Risk P&Ls with a hedge value of {k} ")
+        fo_portfolio_pnl = [
+            x - k * (y - base_spot) for x, y in zip(fo_option_pnl, rand_spot)
+        ]
+        risk_portfolio_pnl = [
+            x - k * (y - base_spot) for x, y in zip(risk_option_pnl, rand_spot)
+        ]
+        sp_values.append(
+            pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).spearman_value
         )
-        fo_portfolio_pnl = [x - k*(y-base_spot) for x, y in zip(fo_option_pnl, rand_spot)]
-        risk_portfolio_pnl = [x - k*(y-base_spot) for x, y in zip(risk_option_pnl, rand_spot)]
-        sp_values.append(pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).spearman_value)
         kstest_values.append(
-            pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).ks_value)
+            pla_stats.pla_stats(fo_portfolio_pnl, risk_portfolio_pnl).ks_value
+        )
 
     fig = pyplot.figure()
     ax1 = fig.add_subplot(121)
@@ -115,15 +122,15 @@ def hedging_example():
     ax1.scatter(ratios, kstest_values)
     ax2.scatter(ratios, sp_values)
 
-    ax1.set_title('FO Pnl vs Risk PnL')
-    ax1.set_xlabel('Hedge Ratio')
-    ax1.set_ylabel('KS Test')
+    ax1.set_title("FO Pnl vs Risk PnL")
+    ax1.set_xlabel("Hedge Ratio")
+    ax1.set_ylabel("KS Test")
 
-    ax2.set_title('FO Pnl vs Risk PnL')
-    ax2.set_xlabel('Hedge Ratio')
-    ax2.set_ylabel('Spearman Correlation')
+    ax2.set_title("FO Pnl vs Risk PnL")
+    ax2.set_xlabel("Hedge Ratio")
+    ax2.set_ylabel("Spearman Correlation")
     pyplot.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     hedging_example()
