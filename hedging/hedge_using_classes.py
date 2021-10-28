@@ -2,7 +2,7 @@ import numpy as np
 import logging
 import pla_stats
 import scenario_generator
-import options_t
+import options
 from matplotlib import pyplot
 import datetime
 
@@ -56,20 +56,20 @@ def hedging_example():
     shocks = scenario_generator.generate_log_normal_shocks(vol=vol, num_shocks=100)
     rand_spot = base_spot * shocks
 
-    option = options_t.EuropeanCallOption(
+    option = options.EuropeanCallOption(
         asset_name=asset_name,
         strike=strike,
         maturity=maturity,
-        pricing_engine=options_t.EuropeanOption.ANALYTICAL,
+        pricing_engine=options.EuropeanOption.ANALYTICAL,
     )
 
     analytical_base_npv = option._price(base_spot, vol, rfr, div)
 
-    option = options_t.EuropeanCallOption(
+    option = options.EuropeanCallOption(
         asset_name=asset_name,
         strike=strike,
         maturity=maturity,
-        pricing_engine=options_t.EuropeanOption.MONTE_CARLO,
+        pricing_engine=options.EuropeanOption.MONTE_CARLO,
         mc_params=mc_params
     )
     mc_base_npv = option._price(base_spot, vol, rfr, div)
@@ -78,20 +78,20 @@ def hedging_example():
     mc_npvs = []
     for spot in rand_spot:
         # PV for analytical shocked, PV for MC shocked
-        option = options_t.EuropeanCallOption(
+        option = options.EuropeanCallOption(
             asset_name=asset_name,
             strike=strike,
             maturity=maturity,
-            pricing_engine=options_t.EuropeanOption.ANALYTICAL,
+            pricing_engine=options.EuropeanOption.ANALYTICAL,
         )
 
         analytical_npvs.append(option._price(spot, vol, rfr, div))
 
-        option = options_t.EuropeanCallOption(
+        option = options.EuropeanCallOption(
             asset_name=asset_name,
             strike=strike,
             maturity=maturity,
-            pricing_engine=options_t.EuropeanOption.MONTE_CARLO,
+            pricing_engine=options.EuropeanOption.MONTE_CARLO,
             mc_params=mc_params
         )
         mc_npvs.append(option._price(spot, vol, rfr, div))
