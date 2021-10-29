@@ -102,42 +102,44 @@ def hedging_example():
 
     stock_deals = [portfolio.Deal(instrument=stock, quantity=-x) for x in ratios]
 
-    portfolios_a = []
-    portfolios_mc = []
+    portfolio_as = []
+    portfolio_mcs = []
 
     for stock_deal in stock_deals:
         temp_portfolio = portfolio.Portfolio()
         temp_portfolio.add_deal(stock_deal)
         temp_portfolio.add_deal(opt_deal_a)
-        portfolios_a.append(temp_portfolio)
+        portfolio_as.append(temp_portfolio)
 
     for stock_deal in stock_deals:
         temp_portfolio = portfolio.Portfolio()
         temp_portfolio.add_deal(stock_deal)
         temp_portfolio.add_deal(opt_deal_mc)
-        portfolios_mc.append(temp_portfolio)
+        portfolio_mcs.append(temp_portfolio)
 
-    base_npvs_a = [x.price(base_mdo) for x in portfolios_a]
-    base_npvs_mc = [x.price(base_mdo) for x in portfolios_mc]
+    base_npvs_a = [x.price(base_mdo) for x in portfolio_as]
+    base_npvs_mc = [x.price(base_mdo) for x in portfolio_mcs]
 
 
     sp_values = []
     kstest_values = []
 
-    for x in range(len(portfolios_a)):
+    for portfolio_a, portfolio_mc, base_npv_a, base_npv_mc in zip(
+            portfolio_as, portfolio_mcs, base_npvs_a, base_npvs_mc
+    ):
         analytical_npvs = []
         mc_npvs = []
         for shocked_mdo in shocked_mdos:
 
-            shocked_npvs_per_portfolio_a = portfolios_a[x].price(shocked_mdo)
+            shocked_npvs_per_portfolio_a = portfolio_a.price(shocked_mdo)
             analytical_npvs.append(shocked_npvs_per_portfolio_a)
 
-            shocked_npvs_per_portfolio_mc = portfolios_mc[x].price(shocked_mdo)
+            shocked_npvs_per_portfolio_mc = portfolio_mc.price(shocked_mdo)
             mc_npvs.append(shocked_npvs_per_portfolio_mc)
 
 
-        fo_portfolio_pnls = [y - base_npvs_a[x] for y in analytical_npvs]
-        risk_portfolio_pnls = [y - base_npvs_mc[x] for y in mc_npvs]
+        fo_portfolio_pnls = [y - base_npv_a for y in analytical_npvs]
+        risk_portfolio_pnls = [y - base_npv_mc for y in mc_npvs]
 
         sp_values.append(pla_stats.pla_stats(fo_portfolio_pnls, risk_portfolio_pnls).spearman_value)
         kstest_values.append(pla_stats.pla_stats(fo_portfolio_pnls, risk_portfolio_pnls).ks_value)
