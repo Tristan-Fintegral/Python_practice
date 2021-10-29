@@ -3,6 +3,8 @@ Create a class for storing stock holdings
 """
 import logging
 from instruments.instrument import BaseInstrument
+from market_data import market_base
+from market_data import asset_data
 
 logger = logging.getLogger(__name__)
 
@@ -30,16 +32,27 @@ class Stock(BaseInstrument):
             self.price_cache[(spot, num_shares)] = calc_price
         return calc_price
 
-    def price(self, market_data_object):
-        asset = market_data_object.asset_lookup(self.asset_name)
-        return self._price(spot=asset.spot, num_shares=self.num_shares)
+    def price(self, asset_data):
+        '''
+        To use the price method I need to input asset data
+        I need to create a MarketDataObject (my mdo below)
+        I pass the add_asset_data method to add my input data into the asset_data that we want to lookup
+        Then i can use the asset_lookup method to lookup for my spot price
+        '''
+        mdo = market_base.MarketDataObject()
+        mdo.add_asset_data(asset_data=asset_data)
+        asset_data = mdo.asset_lookup(self.asset_name)
+        return self._price(spot=asset_data.spot, num_shares=self.num_shares)
 
 
 def stock_example():
     stock_name = 'aapl'
     num_shares = 50
+    my_asset_data = asset_data.EquityAssetMarketData(
+        asset_name=stock_name, spot=100000, volatility=0.1
+    )
     aapl = Stock(stock_name,num_shares)
-    print(f"I have {aapl.price()} of {stock_name} stock")
+    print(f"I have {aapl.price(my_asset_data)} of {stock_name} stock")
 
 if __name__ == '__main__':
     stock_example()
