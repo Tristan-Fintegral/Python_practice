@@ -47,17 +47,21 @@ class Portfolio:
 
         return total_pv
 
-    def deals_with_counterparty(self):
-        pass
+    def deals_with_counterparty(self, counterparty):
+        for index, deal in self.deals.items():
+            if counterparty == deal.counterparty:
+                return index, deal
 
-    def deals_on_instrument(self):
-        pass
+    def deals_on_instrument(self, instrument):
+        for index, deal in self.deals.items():
+            if instrument == deal.instrument:
+                return index, deal
 
 
 def main():
     portfolio_A = Portfolio()
-    portfolio_A.create_deal(instrument='option', quantity=10)
-    portfolio_A.create_deal(instrument='option', quantity=20)
+    portfolio_A.create_deal(instrument='option', quantity=10, counterparty='NASDAQ')
+    portfolio_A.create_deal(instrument='option', quantity=20, counterparty='LCH')
     print(portfolio_A.deals)
 
 
