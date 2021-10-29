@@ -189,7 +189,7 @@ class AmericanOption(VanillaOption, ABC):
             return ql.MCAmericanEngine(process, rng, steps, requiredSamples=num_paths)
         elif self.pricing_engine == self.ANALYTICAL:
             raise NotImplementedError(
-                "ANALYTICAL MODEL IS NOT IMPLEMNTED WITH AMERICAN OPTIONS"
+                "ANALYTICAL MODEL IS NOT IMPLEMENTED WITH AMERICAN OPTIONS"
             )
         else:
             raise NotImplementedError
@@ -240,6 +240,7 @@ class EuropeanPutOption(EuropeanOption):
 
 
 def main():
+
     asset_name = "Asset"
     strike = 120
     maturity = datetime.date(2025, 11, 21)
@@ -251,25 +252,7 @@ def main():
         pricing_engine=EuropeanOption.ANALYTICAL,
     )
 
-    euro_call_2 = EuropeanCallOption(
-        asset_name=asset_name,
-        strike=strike,
-        maturity=maturity,
-        pricing_engine=EuropeanOption.ANALYTICAL,
-    )
-
-    euro_call_1.__eq__(euro_call_2)
-
-    amer_call = AmericanCallOption(
-        asset_name=asset_name,
-        strike=strike,
-        maturity=maturity,
-        pricing_engine=AmericanOption.ANALYTICAL,
-        earliest_date=date.today(),
-    )
-
     print(euro_call_1._price(spot=100, vol=0.1, rfr=0.02, div=0))
-    print(amer_call._price(spot=100, vol=0.1, rfr=0.02, div=0))
 
 
 if __name__ == "__main__":

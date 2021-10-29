@@ -48,7 +48,7 @@ def hedging_example():
     strike = 100
     rfr = 0.05
 
-    n_ratios = 30
+    n_ratios = 20
     maturity = datetime.date(2025, 1, 1)
     ratios = np.linspace(0, 1, n_ratios)
     shocks = scenario_generator.generate_log_normal_shocks(
@@ -80,27 +80,70 @@ def hedging_example():
         mdo.add_asset_data([rfr_asset, shocked_eq_asset])
         shocked_mdos.append(mdo)
 
-    option = options.EuropeanCallOption(
+    option_analytical = options.EuropeanCallOption(
         asset_name=asset_name,
         strike=strike,
         maturity=maturity,
         pricing_engine=options.EuropeanCallOption.ANALYTICAL
     )
+
+    option_mc = options.EuropeanCallOption(
+        asset_name=asset_name,
+        strike=strike,
+        maturity=maturity,
+        pricing_engine=options.EuropeanCallOption.MONTE_CARLO,
+        mc_params={"steps": 1, "num_paths": 10000, "rng": "pseudorandom"}
+    )
+
     stock = stocks.Stock(asset_name=asset_name, num_shares=1)
 
-    opt_deal = portfolio.Deal(instrument=option, quantity=1)
+    opt_deal_a = portfolio.Deal(instrument=option_analytical, quantity=1)
+    opt_deal_mc = portfolio.Deal(instrument=option_mc, quantity=1)
+
     stock_deals = [portfolio.Deal(instrument=stock, quantity=-x) for x in ratios]
 
-    portfolios = []
+    portfolio_as = []
+    portfolio_mcs = []
 
     for stock_deal in stock_deals:
         temp_portfolio = portfolio.Portfolio()
         temp_portfolio.add_deal(stock_deal)
-        temp_portfolio.add_deal(opt_deal)
-        portfolios.append(temp_portfolio)
+        temp_portfolio.add_deal(opt_deal_a)
+        portfolio_as.append(temp_portfolio)
 
-    base_npvs = [x.price(base_mdo) for x in portfolios]
+    for stock_deal in stock_deals:
+        temp_portfolio = portfolio.Portfolio()
+        temp_portfolio.add_deal(stock_deal)
+        temp_portfolio.add_deal(opt_deal_mc)
+        portfolio_mcs.append(temp_portfolio)
 
+    base_npvs_a = [x.price(base_mdo) for x in portfolio_as]
+    base_npvs_mc = [x.price(base_mdo) for x in portfolio_mcs]
+
+
+    sp_values = []
+    kstest_values = []
+
+    for portfolio_a, portfolio_mc, base_npv_a, base_npv_mc in zip(
+            portfolio_as, portfolio_mcs, base_npvs_a, base_npvs_mc
+    ):
+        analytical_npvs = []
+        mc_npvs = []
+        for shocked_mdo in shocked_mdos:
+
+            shocked_npvs_per_portfolio_a = portfolio_a.price(shocked_mdo)
+            analytical_npvs.append(shocked_npvs_per_portfolio_a)
+
+            shocked_npvs_per_portfolio_mc = portfolio_mc.price(shocked_mdo)
+            mc_npvs.append(shocked_npvs_per_portfolio_mc)
+
+
+        fo_portfolio_pnls = [y - base_npv_a for y in analytical_npvs]
+        risk_portfolio_pnls = [y - base_npv_mc for y in mc_npvs]
+
+        sp_values.append(pla_stats.pla_stats(fo_portfolio_pnls, risk_portfolio_pnls).spearman_value)
+        kstest_values.append(pla_stats.pla_stats(fo_portfolio_pnls, risk_portfolio_pnls).ks_value)
+        temp=1
 
     fig = pyplot.figure()
     ax1 = fig.add_subplot(121)
