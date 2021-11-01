@@ -44,7 +44,7 @@ def hedging_example():
     """
     asset_name = 'TestAsset'
     base_spot = 100
-    vol = 0.2
+    vol = 0.1
     strike = 100
     rfr = 0.05
 

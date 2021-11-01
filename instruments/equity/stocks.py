@@ -3,6 +3,7 @@ Create a class for storing stock holdings
 """
 import logging
 from instruments.instrument import BaseInstrument
+from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 
@@ -13,22 +14,11 @@ class Stock(BaseInstrument):
         super().__init__()
         self.asset_name = asset_name
         self.num_shares = num_shares
-        self.price_cache = {}
 
+    @lru_cache(maxsize=128)
     def _price(self, spot, num_shares):
-        if (spot, num_shares) in self.price_cache:
-            logger.info(
-                f'Fetching price for spot {spot} and '
-                f'num_shares {num_shares} from cache.'
-            )
-            calc_price = self.price_cache[(spot, num_shares)]
-        else:
-            logger.info(
-                f'Calling price with spot {spot} and num_shares {num_shares}.'
-            )
-            calc_price = num_shares * spot
-            self.price_cache[(spot, num_shares)] = calc_price
-        return calc_price
+        print(self._price.cache_info())
+        return num_shares * spot
 
     def price(self, market_data_object):
         asset = market_data_object.asset_lookup(self.asset_name)
