@@ -5,6 +5,9 @@ from datetime import date
 from instruments.instrument import BaseInstrument
 from QuantLib.QuantLib import Payoff, StrikedTypePayoff
 from functools import lru_cache
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def to_ql_dt(dt):
@@ -68,9 +71,6 @@ class Option(BaseInstrument, ABC):
         return (
             option1_values == option2_values and self.__class__ == other.__class__
         )
-
-    def __contains__(self, key):
-        return [key.__eq__(x) for x in self.price_cache]
 
 
 class VanillaOption(Option, ABC):
@@ -140,15 +140,29 @@ class EuropeanOption(VanillaOption):
         return bsm_process
 
     def _price(self, spot, vol, rfr, div):
-        bsm_process = self.bsm_process(spot=spot, vol=vol, rfr=rfr, div=div)
+        # add code for call or put
+        if (spot, vol, rfr, div, self.pricing_engine) in self.price_cache:
+            logger.info(
+                f'Fetching price for spot {spot} and '
+                f'vol {vol} from cache with engine {self.pricing_engine}'
+            )
+            calc_price = self.price_cache[(spot, vol, rfr, div, self.pricing_engine)]
+        else:
+            logger.info(
+                f'Calling price with spot {spot} and vol {vol} with engine {self.pricing_engine}.'
+            )
+            bsm_process = self.bsm_process(spot=spot, vol=vol, rfr=rfr, div=div)
+            engine = self.option_model(process=bsm_process)
+            self.option_object.setPricingEngine(engine)
+            calc_price =  self.option_object.NPV()
+            self.price_cache[(spot, vol, rfr, div, self.pricing_engine)] = calc_price
+        return calc_price
 
-        engine = self.option_model(process=bsm_process)
-        self.option_object.setPricingEngine(engine)
-        return self.option_object.NPV()
 
     def price(self, market_data_object):
-        
+
         asset = market_data_object.asset_lookup(self.asset_name)
+
         rfr = market_data_object.asset_lookup('rfr')
         return self._price(
             spot=asset.spot, vol=asset.volatility, rfr=rfr.interest_rate, div=0

@@ -17,7 +17,6 @@ class Stock(BaseInstrument):
 
     @lru_cache(maxsize=128)
     def _price(self, spot, num_shares):
-        print(self._price.cache_info())
         return num_shares * spot
 
     def price(self, market_data_object):

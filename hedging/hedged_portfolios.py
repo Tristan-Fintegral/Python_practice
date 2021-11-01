@@ -48,7 +48,7 @@ def hedging_example():
     strike = 100
     rfr = 0.05
 
-    n_ratios = 20
+    n_ratios = 2
     maturity = datetime.date(2025, 1, 1)
     ratios = np.linspace(0, 1, n_ratios)
     shocks = scenario_generator.generate_log_normal_shocks(
