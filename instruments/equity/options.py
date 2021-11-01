@@ -4,6 +4,7 @@ import QuantLib as ql
 from datetime import date
 from instruments.instrument import BaseInstrument
 from QuantLib.QuantLib import Payoff, StrikedTypePayoff
+from functools import lru_cache
 
 
 def to_ql_dt(dt):
@@ -68,6 +69,9 @@ class Option(BaseInstrument, ABC):
             option1_values == option2_values and self.__class__ == other.__class__
         )
 
+    def __contains__(self, key):
+        return [key.__eq__(x) for x in self.price_cache]
+
 
 class VanillaOption(Option, ABC):
     
@@ -101,6 +105,7 @@ class EuropeanOption(VanillaOption):
             asset_name=asset_name, strike=strike, maturity=maturity, mc_params=mc_params
         )
         self.pricing_engine = self.validate_pricing_engine_input(pricing_engine)
+        self.price_cache = {}
 
     @property
     def exercise_type(self):
@@ -142,6 +147,7 @@ class EuropeanOption(VanillaOption):
         return self.option_object.NPV()
 
     def price(self, market_data_object):
+        
         asset = market_data_object.asset_lookup(self.asset_name)
         rfr = market_data_object.asset_lookup('rfr')
         return self._price(
@@ -249,8 +255,7 @@ def main():
         asset_name=asset_name,
         strike=strike,
         maturity=maturity,
-        pricing_engine=EuropeanOption.ANALYTICAL,
-    )
+        pricing_engine=EuropeanOption.ANALYTICAL)
 
     print(euro_call_1._price(spot=100, vol=0.1, rfr=0.02, div=0))
 
