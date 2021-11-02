@@ -48,7 +48,8 @@ def hedging_example():
     strike = 100
     rfr = 0.05
 
-    n_ratios = 2
+    n_ratios = 20
+
     maturity = datetime.date(2025, 1, 1)
     ratios = np.linspace(0, 1, n_ratios)
     shocks = scenario_generator.generate_log_normal_shocks(
@@ -106,16 +107,17 @@ def hedging_example():
     portfolio_mcs = []
 
     for stock_deal in stock_deals:
-        temp_portfolio = portfolio.Portfolio()
-        temp_portfolio.add_deal(stock_deal)
-        temp_portfolio.add_deal(opt_deal_a)
-        portfolio_as.append(temp_portfolio)
+        temp_portfolio_a = portfolio.Portfolio()
+        temp_portfolio_mc = portfolio.Portfolio()
 
-    for stock_deal in stock_deals:
-        temp_portfolio = portfolio.Portfolio()
-        temp_portfolio.add_deal(stock_deal)
-        temp_portfolio.add_deal(opt_deal_mc)
-        portfolio_mcs.append(temp_portfolio)
+        temp_portfolio_a.add_deal(stock_deal)
+        temp_portfolio_a.add_deal(opt_deal_a)
+
+        temp_portfolio_mc.add_deal(stock_deal)
+        temp_portfolio_mc.add_deal(opt_deal_mc)
+
+        portfolio_as.append(temp_portfolio_a)
+        portfolio_mcs.append(temp_portfolio_mc)
 
     base_npvs_a = [x.price(base_mdo) for x in portfolio_as]
     base_npvs_mc = [x.price(base_mdo) for x in portfolio_mcs]

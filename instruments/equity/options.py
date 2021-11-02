@@ -141,21 +141,20 @@ class EuropeanOption(VanillaOption):
 
     def _price(self, spot, vol, rfr, div):
         # add code for call or put
-        if (spot, vol, rfr, div, self.pricing_engine) in self.price_cache:
+        if (spot, vol, rfr, div, self.pricing_engine, self.strike, self.maturity) in self.price_cache:
             logger.info(
-                f'Fetching price for spot {spot} and '
-                f'vol {vol} from cache with engine {self.pricing_engine}'
+                f'Price from cache: Spot: {spot}, Vol: {vol}, rfr: {rfr}, div: {div}, Model: {self.pricing_engine}, Strike: {self.strike}, Maturity: {self.maturity}.'
             )
-            calc_price = self.price_cache[(spot, vol, rfr, div, self.pricing_engine)]
+            calc_price = self.price_cache[(spot, vol, rfr, div, self.pricing_engine, self.strike, self.maturity)]
         else:
             logger.info(
-                f'Calling price with spot {spot} and vol {vol} with engine {self.pricing_engine}.'
+                f'Calling price: {spot}, Vol: {vol}, rfr: {rfr}, div: {div}, Model: {self.pricing_engine}, Strike: {self.strike}, Maturity: {self.maturity}.'
             )
             bsm_process = self.bsm_process(spot=spot, vol=vol, rfr=rfr, div=div)
             engine = self.option_model(process=bsm_process)
             self.option_object.setPricingEngine(engine)
             calc_price =  self.option_object.NPV()
-            self.price_cache[(spot, vol, rfr, div, self.pricing_engine)] = calc_price
+            self.price_cache[(spot, vol, rfr, div, self.pricing_engine, self.strike, self.maturity)] = calc_price
         return calc_price
 
 
